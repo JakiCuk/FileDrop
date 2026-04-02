@@ -337,6 +337,36 @@
 - [x] Backend regex `BASE64_RE` rozšírený o `-` a `_` pre base64url formát
 - [x] Oprava chyby "Invalid X-Chunk-IV header" pri uploade súborov
 
+## 2026-04-02 — Runtime branding a premenovanie na FileDrop
+
+### Runtime branding substitúcia (DONE)
+- [x] Frontend Dockerfile: build s placeholdermi (`__VITE_COMPANY_NAME__`, `__VITE_COMPANY_LOGO_URL__`)
+- [x] Nový entrypoint skript `docker-entrypoint-filedrop.sh` — `sed` substitúcia placeholderov v JS/HTML súboroch pri štarte kontajnera
+- [x] `frontend/index.html` — `<title>` používa placeholder namiesto hardcoded hodnoty
+- [x] `docker-compose.prod.yml` a `docker-compose.yml` — `VITE_COMPANY_NAME` a `VITE_COMPANY_LOGO_URL` pridané ako runtime environment premenné pre frontend službu
+- [x] Rovnaký GHCR image funguje pre akýkoľvek branding bez rebuildu
+- [x] CI/CD pipeline — GitHub Actions workflow (`release.yml`): automatický build Docker images, push na GHCR, GitHub Release so zip balíčkom pri tagu `v*`
+
+### Premenovanie ShareDrop → FileDrop (DONE)
+- [x] `admin/index.html` — title "FileDrop Admin"
+- [x] `admin/src/locales/{en,cs,sk}.ts` — app.title "FileDrop Admin"
+- [x] `frontend/src/components/Layout.tsx` — fallback "FileDrop"
+- [x] `frontend/src/pages/HomePage.tsx` — fallback "FileDrop"
+- [x] `backend/src/config.ts` — appName fallback "FileDrop"
+- [x] `backend/src/index.ts` — log prefix "FileDrop"
+- [x] `nginx/docker-entrypoint.sh` — log prefix "[FileDrop]"
+- [x] `docker-compose.yml` — defaulty APP_NAME a VITE_COMPANY_NAME "FileDrop"
+- [x] `docker-compose.prod.yml` — defaulty APP_NAME a VITE_COMPANY_NAME "FileDrop"
+- [x] `.env.example` — defaulty a komentáre "FileDrop"
+- [x] `.env` — komentár "FileDrop"
+
+### Aktualizácia dokumentácie (DONE)
+- [x] `README.md` — branding tabuľka, runtime poznámka namiesto build-time
+- [x] `docs/DEPLOYMENT.md` — runtime substitúcia vysvetlenie, zjednodušený postup po zmene
+- [x] `docs/ARCHITECTURE.md` — branding typ "Runtime" namiesto "Build-time", popis entrypoint logiky
+- [x] `docs/CHANGELOG.md` — nový záznam v1.0.1
+- [x] `docs/PROGRESS.md` — nový záznam
+
 ## Next steps (plánované)
 
 ### Ďalšie vylepšenia
@@ -344,7 +374,7 @@
 - [ ] Implementovať RBAC rozšírenie — granulárnejšie oprávnenia pre admin roly
 - [ ] Monitoring výkonu — response time tracking, slow query logging
 - [ ] Automatizované testy — unit testy pre validáciu, integračné testy pre API endpointy
-- [ ] CI/CD pipeline — automatický build, test a deploy
+
 
 ## Štruktúra súborov
 

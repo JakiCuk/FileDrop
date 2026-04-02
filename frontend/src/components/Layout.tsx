@@ -5,7 +5,7 @@ import { supportedLanguages } from "../i18n";
 import type { ReactNode } from "react";
 
 const companyLogoUrl = import.meta.env.VITE_COMPANY_LOGO_URL || "";
-const companyName = import.meta.env.VITE_COMPANY_NAME || "ShareDrop";
+const companyName = import.meta.env.VITE_COMPANY_NAME || "FileDrop";
 
 export default function Layout({ children }: { children: ReactNode }) {
   const { token, user, logout } = useAuth();

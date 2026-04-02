@@ -1,5 +1,13 @@
 # FileDrop — Changelog
 
+## [1.0.1] - 2026-04-02
+
+### Zmeny
+- **Runtime branding** — `VITE_COMPANY_NAME` a `VITE_COMPANY_LOGO_URL` sa aplikujú pri štarte kontajnera (runtime substitúcia), nie pri builde. Umožňuje zmenu brandingu bez rebuildu Docker image.
+- **Premenovanie ShareDrop na FileDrop** — všetky hardcoded výskyty "ShareDrop" nahradené na "FileDrop" (admin locale, HTML titulky, backend logy, entrypoint skripty, docker-compose defaulty, .env.example)
+- **Frontend Dockerfile** — nový entrypoint skript s `sed` substitúciou placeholderov v JS/HTML súboroch
+- **docker-compose.prod.yml** — frontend služba dostáva `VITE_COMPANY_NAME` a `VITE_COMPANY_LOGO_URL` ako runtime environment premenné
+
 ## [1.0.0] - 2026-03-31
 
 ### Funkcie

@@ -46,7 +46,7 @@ services:
       SMTP_OAUTH2_CLIENT_ID: ${SMTP_OAUTH2_CLIENT_ID:-}
       SMTP_OAUTH2_CLIENT_SECRET: ${SMTP_OAUTH2_CLIENT_SECRET:-}
       ADMIN_EMAILS: ${ADMIN_EMAILS:-}
-      APP_NAME: ${APP_NAME:-ShareDrop}
+      APP_NAME: ${APP_NAME:-FileDrop}
       NODE_ENV: production
       PORT: 3000
     volumes:
@@ -58,12 +58,14 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_COMPANY_LOGO_URL: ${VITE_COMPANY_LOGO_URL:-}
-        VITE_COMPANY_NAME: ${VITE_COMPANY_NAME:-ShareDrop}
+        VITE_COMPANY_NAME: ${VITE_COMPANY_NAME:-FileDrop}
     restart: unless-stopped
     depends_on:
       - backend
     environment:
       SSL_MODE: ${SSL_MODE:-external}
+      VITE_COMPANY_NAME: ${VITE_COMPANY_NAME:-FileDrop}
+      VITE_COMPANY_LOGO_URL: ${VITE_COMPANY_LOGO_URL:-}
     ports:
       - "${APP_PORT:-8080}:80"
       - "${APP_SSL_PORT:-8443}:443"

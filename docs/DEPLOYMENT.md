@@ -13,10 +13,16 @@ VITE_COMPANY_NAME=FileDrop
 ```
 
 - `APP_NAME` — názov v e-mailoch a admin notifikáciách (runtime, backend)
-- `VITE_COMPANY_LOGO_URL` — logo v hlavičke (build-time, treba rebuild frontend)
-- `VITE_COMPANY_NAME` — názov vedľa loga (build-time, treba rebuild frontend)
+- `VITE_COMPANY_LOGO_URL` — logo v hlavičke (runtime, frontend)
+- `VITE_COMPANY_NAME` — názov vedľa loga, v title, na úvodnej stránke a v päte (runtime, frontend)
 - Logo: umiestniť SVG/PNG do `frontend/public/logo.svg`
-- Po zmene VITE premenných: `docker compose build frontend && docker compose up -d frontend`
+
+**Runtime substitúcia:** Frontend Docker image sa builduje s placeholdermi (`__VITE_COMPANY_NAME__`, `__VITE_COMPANY_LOGO_URL__`). Pri štarte kontajnera entrypoint skript automaticky nahradí placeholdery skutočnými hodnotami z environment premenných. Vďaka tomu nie je potrebný rebuild image pri zmene brandingu — stačí zmeniť `.env` a reštartovať kontajner.
+
+Po zmene branding premenných:
+```bash
+docker compose up -d --force-recreate
+```
 
 ---
 

@@ -42,7 +42,7 @@ export const config = {
     oauth2ClientSecret: process.env.SMTP_OAUTH2_CLIENT_SECRET || "",
   },
 
-  appName: process.env.APP_NAME || "ShareDrop",
+  appName: process.env.APP_NAME || "FileDrop",
 
   corsOrigin: process.env.CORS_ORIGIN || "*",
 

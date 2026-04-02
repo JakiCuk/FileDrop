@@ -86,7 +86,7 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 
 cronRegistry.init().then(() => {
   app.listen(config.port, () => {
-    console.log(`ShareDrop backend running on port ${config.port}`);
+    console.log(`FileDrop backend running on port ${config.port}`);
   });
 }).catch((err) => {
   console.error("Failed to initialize cron registry:", err);

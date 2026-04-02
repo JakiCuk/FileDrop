@@ -49,7 +49,9 @@ FileDrop je webová aplikácia pre dočasné zdieľanie súborov s end-to-end (E
 └───────────────────────────────────────────────────────────────┘
 ```
 
-Frontend kontajner obsahuje custom entrypoint, ktorý podľa `SSL_MODE` vyberie:
+Frontend kontajner obsahuje custom entrypoint, ktorý pri štarte:
+1. Nahradí branding placeholdery v JS/HTML súboroch hodnotami z environment premenných (runtime substitúcia)
+2. Podľa `SSL_MODE` vyberie nginx konfiguráciu:
 - `nginx-http.conf` — HTTP only (port 80), pre režim za externým proxy
 - `nginx-ssl.conf` — HTTPS (port 443) s TLS 1.2+, HSTS, HTTP→HTTPS redirect
 
@@ -239,16 +241,20 @@ Aplikácia podporuje konfigurovateľný branding pre nasadenie v rôznych organi
 | Premenná | Kde sa používa | Typ |
 |----------|---------------|-----|
 | `APP_NAME` | E-maily (subjekty, hlavičky), admin notifikácie | Runtime (backend) |
-| `VITE_COMPANY_LOGO_URL` | Logo v hlavičke frontendu | Build-time (frontend) |
-| `VITE_COMPANY_NAME` | Hlavička, úvodná stránka, päta | Build-time (frontend) |
+| `VITE_COMPANY_LOGO_URL` | Logo v hlavičke frontendu | Runtime (frontend) |
+| `VITE_COMPANY_NAME` | Title, hlavička, úvodná stránka, päta | Runtime (frontend) |
 
-Farebná schéma je definovaná v `frontend/tailwind.config.js` cez `brand` paletu (Tailwind CSS tokeny). Pre zmenu farieb stačí aktualizovať paletu a rebuildiť frontend.
+### Runtime substitúcia
+
+Frontend image sa builduje s placeholdermi (`__VITE_COMPANY_NAME__`, `__VITE_COMPANY_LOGO_URL__`). Docker entrypoint skript pri štarte kontajnera nahradí placeholdery v JS a HTML súboroch skutočnými hodnotami z environment premenných pomocou `sed`. Vďaka tomu je možné meniť branding bez rebuildu image — rovnaký GHCR image funguje pre akúkoľvek organizáciu.
+
+Farebná schéma je definovaná v `frontend/tailwind.config.js` cez `brand` paletu (Tailwind CSS tokeny). Pre zmenu farieb je potrebné aktualizovať paletu a rebuildiť frontend.
 
 Pre nasadenie v inej organizácii:
 1. Nastaviť 3 env premenné v `.env`
 2. Umiestniť logo do `frontend/public/logo.svg`
-3. Voliteľne upraviť farebnú paletu v `tailwind.config.js`
-4. `docker compose build frontend backend && docker compose up -d`
+3. Voliteľne upraviť farebnú paletu v `tailwind.config.js` (vyžaduje rebuild)
+4. `docker compose up -d --force-recreate`
 
 ### Ďalšie
 - **CORS** — konfigurovateľné povolené originy (`CORS_ORIGIN`)

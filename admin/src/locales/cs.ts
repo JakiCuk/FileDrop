@@ -1,6 +1,6 @@
 export default {
   app: {
-    title: "ShareDrop Admin",
+    title: "FileDrop Admin",
   },
   nav: {
     dashboard: "Prehled",

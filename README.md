@@ -89,11 +89,11 @@ Všetky nastavenia sú cez environment premenné v `.env` súbore. Pozri [.env.e
 
 | Premenná | Default | Popis |
 |----------|---------|-------|
-| `APP_NAME` | `ShareDrop` | Názov aplikácie (e-maily, notifikácie) |
+| `APP_NAME` | `FileDrop` | Názov aplikácie (e-maily, notifikácie) |
 | `VITE_COMPANY_LOGO_URL` | *(prázdne)* | URL loga v hlavičke (napr. `/logo.svg`) |
-| `VITE_COMPANY_NAME` | `ShareDrop` | Názov vedľa loga (hlavička, úvodná stránka, päta) |
+| `VITE_COMPANY_NAME` | `FileDrop` | Názov vedľa loga (hlavička, úvodná stránka, päta) |
 
-*Poznámka: `VITE_*` premenné sa aplikujú pri builde frontendu. Po zmene je potrebné `docker compose build frontend`.*
+*Branding sa aplikuje automaticky pri štarte kontajnera (runtime substitúcia). Po zmene `.env` stačí `docker compose up -d --force-recreate` — nie je potrebný rebuild.*
 
 ### Bezpečnosť
 
