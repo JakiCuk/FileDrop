@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  otpCodes OtpCode[]
+  shares   Share[]
+
+  @@map("users")
+}
+
+model OtpCode {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  code      String
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("otp_codes")
+}
+
+enum UploaderType {
+  OWNER
+  RECIPIENT
+}
+
+model Share {
+  id                   String    @id @default(uuid())
+  userId               String    @map("user_id")
+  slug                 String    @unique
+  allowRecipientUpload Boolean   @default(false) @map("allow_recipient_upload")
+  expiresAt            DateTime? @map("expires_at")
+  maxDownloads         Int?      @map("max_downloads")
+  downloadCount        Int       @default(0) @map("download_count")
+  parentShareId        String?   @map("parent_share_id")
+  ownerLocale          String?   @map("owner_locale")
+  createdAt            DateTime  @default(now()) @map("created_at")
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  files       FileRecord[]
+  parentShare Share?       @relation("ShareReplies", fields: [parentShareId], references: [id], onDelete: SetNull)
+  replies     Share[]      @relation("ShareReplies")
+
+  @@map("shares")
+}
+
+model FileRecord {
+  id            String       @id @default(uuid())
+  shareId       String       @map("share_id")
+  encryptedName String       @map("encrypted_name")
+  size          BigInt
+  chunkCount    Int          @map("chunk_count")
+  uploadedBy    UploaderType @default(OWNER) @map("uploaded_by")
+  storagePath   String       @map("storage_path")
+  completed     Boolean      @default(false)
+  createdAt     DateTime     @default(now()) @map("created_at")
+
+  share  Share   @relation(fields: [shareId], references: [id], onDelete: Cascade)
+  chunks Chunk[]
+
+  @@map("file_records")
+}
+
+model Chunk {
+  id          String @id @default(uuid())
+  fileId      String @map("file_id")
+  index       Int
+  iv          String
+  size        Int
+  storagePath String @map("storage_path")
+
+  file FileRecord @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@unique([fileId, index])
+  @@map("chunks")
+}
+
+model CronJob {
+  id          String   @id
+  name        String
+  description String   @default("")
+  schedule    String
+  enabled     Boolean  @default(true)
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("cron_jobs")
+}
+
+model DailyStats {
+  id                String   @id @default(uuid())
+  date              DateTime @unique @db.Date
+  sharesCreated     Int      @map("shares_created")
+  sharesActive      Int      @map("shares_active")
+  totalFiles        Int      @map("total_files")
+  totalStorageBytes BigInt   @map("total_storage_bytes")
+  totalUsers        Int      @map("total_users")
+  totalDownloads    Int      @map("total_downloads")
+
+  @@map("daily_stats")
+}
+
+model CleanupLog {
+  id            String   @id @default(uuid())
+  startedAt     DateTime @map("started_at")
+  completedAt   DateTime @map("completed_at")
+  sharesDeleted Int      @map("shares_deleted")
+  bytesFreed    BigInt   @map("bytes_freed")
+  error         String?
+
+  @@map("cleanup_logs")
+}
+
+model SecurityEvent {
+  id        String   @id @default(uuid())
+  event     String
+  ip        String
+  method    String
+  path      String
+  details   String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@index([event])
+  @@map("security_events")
+}

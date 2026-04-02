@@ -1,0 +1,31 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.production
+.env.*.local
+*.log
+.DS_Store
+Thumbs.db
+backend/dist/
+frontend/dist/
+uploads/
+.cursor/
+.claude/
+
+# Certificates & keys
+certs/
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Git backup
+.git-backup/
