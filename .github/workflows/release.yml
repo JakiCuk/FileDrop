@@ -63,7 +63,7 @@ jobs:
           cp .env.example release-assets/.env.example
           cp nginx/nginx-http.conf release-assets/nginx/
           cp nginx/nginx-ssl.conf release-assets/nginx/
-          cp nginx/no-cert.pem release-assets/nginx/
+          cp nginx/docker-entrypoint.sh release-assets/nginx/
           cd release-assets && zip -r ../filedrop-${{ github.ref_name }}.zip .
 
       - uses: softprops/action-gh-release@v2
