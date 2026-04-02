@@ -1,0 +1,72 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/filedrop
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - context: ./backend
+            image_suffix: backend
+          - context: ./frontend
+            image_suffix: frontend
+          - context: ./admin
+            image_suffix: admin
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.IMAGE_PREFIX }}-${{ matrix.image_suffix }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets/nginx
+          cp docker-compose.prod.yml release-assets/docker-compose.yml
+          cp .env.example release-assets/.env.example
+          cp nginx/nginx-http.conf release-assets/nginx/
+          cp nginx/nginx-ssl.conf release-assets/nginx/
+          cp nginx/no-cert.pem release-assets/nginx/
+          cd release-assets && zip -r ../filedrop-${{ github.ref_name }}.zip .
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: filedrop-${{ github.ref_name }}.zip

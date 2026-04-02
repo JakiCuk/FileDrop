@@ -1,0 +1,79 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sharedrop
+      POSTGRES_USER: sharedrop
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sharedrop_secret}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sharedrop"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    image: ghcr.io/jakicuk/filedrop-backend:latest
+    env_file: .env
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://sharedrop:${POSTGRES_PASSWORD:-sharedrop_secret}@postgres:5432/sharedrop
+      JWT_SECRET: ${JWT_SECRET:-change_me_in_production}
+      JWT_EXPIRY: ${JWT_EXPIRY:-24h}
+      ALLOWED_EMAIL_DOMAINS: ${ALLOWED_EMAIL_DOMAINS:-}
+      OTP_EXPIRY_MINUTES: ${OTP_EXPIRY_MINUTES:-10}
+      SHARE_EXPIRY_OPTIONS_DAYS: ${SHARE_EXPIRY_OPTIONS_DAYS:-1,7,14,30,90}
+      SHARE_DEFAULT_EXPIRY_DAYS: ${SHARE_DEFAULT_EXPIRY_DAYS:-30}
+      REPLY_SHARE_EXPIRY_DAYS: ${REPLY_SHARE_EXPIRY_DAYS:-7}
+      MAX_FILE_SIZE_MB: ${MAX_FILE_SIZE_MB:-51200}
+      CHUNK_SIZE_MB: ${CHUNK_SIZE_MB:-5}
+      UPLOAD_DIR: /data/uploads
+      SMTP_MODE: ${SMTP_MODE:-none}
+      SMTP_FROM: ${SMTP_FROM:-noreply@sharedrop.local}
+      SMTP_TLS_REJECT_UNAUTHORIZED: ${SMTP_TLS_REJECT_UNAUTHORIZED:-true}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_OAUTH2_TENANT_ID: ${SMTP_OAUTH2_TENANT_ID:-}
+      SMTP_OAUTH2_CLIENT_ID: ${SMTP_OAUTH2_CLIENT_ID:-}
+      SMTP_OAUTH2_CLIENT_SECRET: ${SMTP_OAUTH2_CLIENT_SECRET:-}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+      APP_NAME: ${APP_NAME:-ShareDrop}
+      NODE_ENV: production
+      PORT: 3000
+    volumes:
+      - uploads:/data/uploads
+
+  frontend:
+    image: ghcr.io/jakicuk/filedrop-frontend:latest
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      SSL_MODE: ${SSL_MODE:-external}
+    ports:
+      - "${APP_PORT:-8080}:80"
+      - "${APP_SSL_PORT:-8443}:443"
+    volumes:
+      - ./nginx/nginx-http.conf:/etc/nginx/conf.d/nginx-http.conf:ro
+      - ./nginx/nginx-ssl.conf:/etc/nginx/conf.d/nginx-ssl.conf:ro
+      - ${SSL_CERT_PATH:-./nginx/no-cert.pem}:/etc/nginx/ssl/cert.pem:ro
+      - ${SSL_KEY_PATH:-./nginx/no-cert.pem}:/etc/nginx/ssl/key.pem:ro
+
+  admin:
+    image: ghcr.io/jakicuk/filedrop-admin:latest
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${ADMIN_PORT:-8084}:80"
+
+volumes:
+  pgdata:
+  uploads:

@@ -29,12 +29,28 @@ English, Slovenčina, Čeština, Deutsch, Français, Español, Italiano, Polski,
 
 - [Docker](https://docs.docker.com/get-docker/) a [Docker Compose](https://docs.docker.com/compose/install/)
 
-### Spustenie
+### Inštalácia z pre-built images (odporúčané)
+
+1. Stiahnite si zip z [posledného releasu](https://github.com/JakiCuk/FileDrop/releases/latest)
+2. Rozbaľte a nakonfigurujte:
+   ```bash
+   unzip filedrop-*.zip -d filedrop && cd filedrop
+   cp .env.example .env
+   # Upravte .env podľa potreby
+   ```
+3. Spustite:
+   ```bash
+   docker compose up -d
+   ```
+
+Images sa automaticky stiahnu z GitHub Container Registry — žiadne buildovanie nie je potrebné.
+
+### Inštalácia zo zdrojového kódu
 
 ```bash
 # Klonovanie repozitára
-git clone <repository-url>
-cd share_app
+git clone https://github.com/JakiCuk/FileDrop.git
+cd FileDrop
 
 # Konfigurácia (voliteľné — funguje aj s defaultmi)
 cp .env.example .env
