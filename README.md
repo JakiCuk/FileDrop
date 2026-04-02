@@ -203,4 +203,4 @@ share_app/
 
 ## Licencia
 
-MIT
+[AGPL-3.0](LICENSE)
