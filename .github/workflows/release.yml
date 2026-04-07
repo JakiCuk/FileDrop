@@ -20,11 +20,11 @@ jobs:
       matrix:
         include:
           - context: ./backend
+            file: ./backend/Dockerfile
             image_suffix: backend
-          - context: ./frontend
+          - context: .
+            file: ./frontend/Dockerfile
             image_suffix: frontend
-          - context: ./admin
-            image_suffix: admin
     steps:
       - uses: actions/checkout@v4
 
@@ -46,6 +46,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -58,12 +59,10 @@ jobs:
 
       - name: Prepare release assets
         run: |
-          mkdir -p release-assets/nginx
+          mkdir -p release-assets
           cp docker-compose.prod.yml release-assets/docker-compose.yml
-          cp .env.example release-assets/.env.example
-          cp nginx/nginx-http.conf release-assets/nginx/
-          cp nginx/nginx-ssl.conf release-assets/nginx/
-          cp nginx/docker-entrypoint.sh release-assets/nginx/
+          cp docker-compose.ssl.yml  release-assets/docker-compose.ssl.yml
+          cp .env.example            release-assets/.env.example
           cd release-assets && zip -r ../filedrop-${{ github.ref_name }}.zip .
 
       - uses: softprops/action-gh-release@v2
