@@ -1,6 +1,6 @@
 # FileDrop — Changelog
 
-## [Unreleased]
+## [1.0.2] - 2026-04-07
 
 ### Zmeny
 - **`SMTP_FROM_NAME`** — nová voliteľná premenná pre zobrazované meno odosielateľa v mail klientoch. Ak je nastavená, mail `From` má tvar `"FileDrop" <noreply@example.com>`; ak je prázdna, posiela sa len holá adresa (existujúce správanie). Implementované cez `config.smtp.fromFormatted` a aplikované na OTP, reply-share aj admin notifikácie.
