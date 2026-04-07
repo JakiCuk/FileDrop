@@ -1,5 +1,26 @@
 # FileDrop — Changelog
 
+## [Unreleased]
+
+### BREAKING
+- **Admin konzola zlúčená do frontend kontajnera** — admin SPA sa už nebuilduje ako samostatný Docker image. Beží pod sub-cestou `/admin/` na rovnakom hoste/porte ako hlavná aplikácia (`https://filedrop.example.com/admin/`). Reverse proxy potrebuje len jeden vhost namiesto dvoch.
+- **`ADMIN_PORT` premenná zrušená** — admin používa rovnaký port ako frontend (`APP_PORT`, default 8080).
+- **Cert bind-mounty cez override súbor** — `docker-compose.yml` v defaulte už nemontuje žiadne certifikáty ani nginx confs. Pri `SSL_MODE=docker` operator pridá `-f docker-compose.ssl.yml` (alebo nastaví `COMPOSE_FILE=docker-compose.yml:docker-compose.ssl.yml` v `.env`).
+- **`nginx/` adresár v koreni repa zmazaný** — `nginx-http.conf`, `nginx-ssl.conf`, `docker-entrypoint.sh` a placeholder `no-cert.pem` boli presunuté do `frontend/nginx/` a zabudované priamo do frontend image. Server po novom potrebuje len `docker-compose.yml` + `.env`.
+
+### Migrácia
+1. Zastaviť starý stack: `docker compose down`
+2. V `.env` zmazať `ADMIN_PORT`, prípadne nastaviť `FILEDROP_VERSION=1.1.0`
+3. Stiahnuť nový `docker-compose.yml` (z release zipu alebo repa)
+4. Zmazať starý `nginx/` adresár na serveri (už nie je potrebný)
+5. V reverse proxy zmazať samostatný admin vhost — admin je dostupný na `/admin/` hlavnej domény
+6. Pre `SSL_MODE=docker` pridať override súbor cez `-f docker-compose.ssl.yml` alebo `COMPOSE_FILE` v `.env`
+7. `docker compose pull && docker compose up -d`
+
+### Cleanup
+- Build matrix v CI workflow: 3 → 2 image (`backend`, `frontend`). Admin tagy v GHCR ostávajú len pre rollback.
+- Release zip: obsahuje len `docker-compose.yml`, `docker-compose.ssl.yml` a `.env.example`.
+
 ## [1.0.2] - 2026-04-07
 
 ### Zmeny

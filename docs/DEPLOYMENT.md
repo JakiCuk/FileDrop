@@ -18,7 +18,7 @@ Hodnoty, ktoré môžeš nastaviť do `.env`:
 | `1.2`    | Najnovší patch v rade `1.2.x` (auto bug‑fixy, žiadne breaking) | **odporúčané pre produkciu** |
 | `1.2.3`  | Presne táto verzia, nikdy iná | striktný rollback / audit |
 
-CI workflow (`.github/workflows/release.yml`) pri každom git tagu `v*` automaticky pushne všetky tri varianty (`1.2.3`, `1.2`, `latest`) do GHCR pre každý z troch image (`backend`, `frontend`, `admin`).
+CI workflow (`.github/workflows/release.yml`) pri každom git tagu `v*` automaticky pushne všetky tri varianty (`1.2.3`, `1.2`, `latest`) do GHCR pre každý z dvoch image (`backend`, `frontend`). Admin SPA je súčasťou frontend image (od v1.1.0).
 
 ### Update na novú verziu
 
@@ -70,7 +70,7 @@ docker compose up -d --force-recreate
 
 ## Admin konzola
 
-Admin konzola beží ako samostatný Docker kontajner na porte 8084 (konfigurovateľné cez `ADMIN_PORT`).
+Od v1.1.0 je admin SPA súčasťou frontend Docker image a beží pod sub-cestou **`/admin/`** na rovnakom hoste a porte ako hlavná aplikácia. Nie je potrebný samostatný kontajner ani osobitný vhost v reverse proxy.
 
 ### Konfigurácia
 
@@ -78,44 +78,15 @@ Do `.env` pridajte:
 
 ```ini
 ADMIN_EMAILS=admin@company.com:admin,viewer@company.com:viewer
-ADMIN_PORT=8084
 ```
 
 `ADMIN_EMAILS` — čiarkou oddelený zoznam admin e-mailov s rolami:
 - `admin` — plné práva (mazanie zdieľaní, editácia cron jobov)
 - `viewer` — len čítanie (dashboard, štatistiky)
 
-### Spustenie
+### Prístup
 
-Admin kontajner sa spustí automaticky s `docker compose up -d`. Je dostupný na `http://hostname:8084`.
-
-Pre prístup za externým reverse proxy pridajte ďalší location/vhost:
-
-**Apache:**
-```apache
-<VirtualHost *:443>
-    ServerName admin.sharedrop.example.com
-    # ... SSL config ...
-    ProxyPass        / http://localhost:8084/
-    ProxyPassReverse / http://localhost:8084/
-</VirtualHost>
-```
-
-**Nginx:**
-```nginx
-server {
-    listen 443 ssl;
-    server_name admin.sharedrop.example.com;
-    # ... SSL config ...
-    location / {
-        proxy_pass http://localhost:8084;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
+Admin konzola je dostupná na `https://filedrop.example.com/admin/`. Reverse proxy nepotrebuje žiadnu špeciálnu konfiguráciu — `/admin/` je obyčajná location v rámci jedného vhostu, a `/api/admin/*` chráni `requireAdmin` middleware na backende.
 
 ---
 
@@ -242,9 +213,19 @@ APP_SSL_PORT=443
 
 ### 3. Start
 
+`SSL_MODE=docker` vyžaduje override súbor `docker-compose.ssl.yml`, ktorý pridá cert bind-mounty a port 443:
+
 ```bash
-docker compose up -d --build
+docker compose -f docker-compose.yml -f docker-compose.ssl.yml up -d
 ```
+
+Alebo trvalo cez `.env` (potom stačí obyčajné `docker compose up -d`):
+
+```ini
+COMPOSE_FILE=docker-compose.yml:docker-compose.ssl.yml
+```
+
+V `SSL_MODE=external` (default) sa override súbor nepoužíva — kontajner servíruje len HTTP na porte 80 / `APP_PORT`, žiadne certifikáty sa nikam nemontujú.
 
 The container will:
 - Redirect HTTP (port 80) to HTTPS (port 443)
@@ -273,7 +254,8 @@ docker compose logs frontend | head -5
 | 80   | Inbound   | HTTP (redirect to HTTPS in docker mode) |
 | 443  | Inbound   | HTTPS (docker mode) or handled by external proxy |
 | 8080 | Inbound   | HTTP (external mode, configurable via `APP_PORT`) |
-| 8084 | Inbound   | Admin konzola (konfigurovateľné cez ADMIN_PORT) |
+
+Admin konzola používa rovnaký port ako frontend (sub-cesta `/admin/`).
 
 ---
 
@@ -320,7 +302,7 @@ Rate limity sú pevne nastavené v kóde. Pre úpravu je potrebné zmeniť hodno
 
 ### Bezpečnostné hlavičky
 
-Nginx konfigurácie (http, ssl, admin) obsahujú tieto bezpečnostné hlavičky:
+Nginx konfigurácie (http, ssl) obsahujú tieto bezpečnostné hlavičky:
 - `Content-Security-Policy` — reštrikcia zdrojov na `'self'`
 - `X-Frame-Options: DENY` — ochrana proti clickjacking
 - `X-Content-Type-Options: nosniff`

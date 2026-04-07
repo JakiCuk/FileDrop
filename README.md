@@ -12,7 +12,7 @@ Webová aplikácia pre dočasné zdieľanie súborov s end-to-end šifrovaním. 
 - **Limit stiahnutí** — voliteľné obmedzenie počtu stiahnutí na zdieľanie
 - **22 jazykov** — automatická detekcia jazyka prehliadača, manuálny výber, EN fallback
 - **Automatická expirácia** — zdieľania sa automaticky mažú po uplynutí platnosti
-- **Admin konzola** — monitoring, štatistiky, správa zdieľaní, cron joby (port 8084)
+- **Admin konzola** — monitoring, štatistiky, správa zdieľaní, cron joby (dostupná na `/admin/`)
 - **Disk monitoring** — automatická kontrola voľného miesta, blokovanie uploadov pri plnom disku
 - **Bezpečnostné hlavičky** — CSP, HSTS, X-Frame-Options, rate limiting na všetkých endpointoch
 - **Konfigurovateľný SSL** — za externým reverse proxy alebo priamo v Docker kontajneri
@@ -60,7 +60,7 @@ cp .env.example .env
 docker compose up -d --build
 
 # Aplikácia je dostupná na http://localhost:8080
-# Admin konzola na http://localhost:8084
+# Admin konzola na http://localhost:8080/admin/
 ```
 
 ### Zastavenie
@@ -108,7 +108,8 @@ Všetky nastavenia sú cez environment premenné v `.env` súbore. Pozri [.env.e
 | Premenná | Default | Popis |
 |----------|---------|-------|
 | `ADMIN_EMAILS` | *(prázdne)* | Admini: `email:admin,email:viewer` |
-| `ADMIN_PORT` | `8084` | Port admin konzoly |
+
+*Admin konzola je dostupná na `/admin/` rovnakého hosta ako frontend (žiadny samostatný port).*
 
 ### Disk monitoring
 
@@ -176,8 +177,6 @@ share_app/
 │       ├── services/     (api, crypto, chunkedUpload, chunkedDownload)
 │       └── hooks/        (useAuth)
 ├── admin/
-│   ├── Dockerfile
-│   ├── nginx.conf
 │   ├── package.json
 │   └── src/
 │       ├── App.tsx
@@ -187,11 +186,6 @@ share_app/
 │       ├── components/   (AdminLayout, Sidebar, StatsCard, DataTable, OtpInput)
 │       ├── services/     (api)
 │       └── hooks/        (useAdminAuth)
-├── nginx/
-│   ├── nginx-http.conf
-│   ├── nginx-ssl.conf
-│   ├── docker-entrypoint.sh
-│   └── no-cert.pem
 └── docs/
     ├── ARCHITECTURE.md
     ├── API.md

@@ -30,24 +30,23 @@ FileDrop je webová aplikácia pre dočasné zdieľanie súborov s end-to-end (E
 ┌────────────────────────────────┼──────────────────────────────┐
 │ Docker Compose                 │                              │
 │                                ▼                              │
-│  ┌─────────────────┐   ┌──────────┐   ┌───────────────────┐  │
-│  │    Frontend      │   │ Backend  │   │    PostgreSQL      │  │
-│  │    (Nginx)       │──▶│ (Express)│──▶│    :5432           │  │
-│  │  :80 (HTTP)      │   │ :3000    │   └───────────────────┘  │
-│  │  :443 (SSL)      │   └────┬─────┘                           │
-│  └─────────────────┘        │                                 │
-│       │                     ├───────────────────┐             │
-│       │                     ▼                   ▼             │
-│       │              /data/uploads     ┌───────────────────┐  │
-│       │              (Docker volume)   │ Admin (Nginx)      │  │
-│       │                                │ :80 (cont.)        │  │
-│       │                                │ :8084 (host)       │  │
-│       ▼                                └───────────────────┘  │
+│  ┌──────────────────────┐  ┌──────────┐  ┌───────────────┐   │
+│  │     Frontend          │  │ Backend  │  │  PostgreSQL    │   │
+│  │     (Nginx)           │─▶│ (Express)│─▶│  :5432         │   │
+│  │  /        → SPA       │  │ :3000    │  └───────────────┘   │
+│  │  /admin/  → Admin SPA │  └────┬─────┘                      │
+│  │  /api/    → backend   │       │                            │
+│  │  :80 (HTTP)           │       ▼                            │
+│  │  :443 (SSL, override) │   /data/uploads                    │
+│  └──────────────────────┘    (Docker volume)                  │
+│       │                                                        │
+│       ▼                                                        │
 │  :8080 (HTTP)                                                  │
-│  :8443 (SSL)                                                   │
-│  (host ports)                                                  │
+│  :8443 (SSL — len cez docker-compose.ssl.yml override)         │
 └───────────────────────────────────────────────────────────────┘
 ```
+
+Po refactore (v1.1.0) beží stack v 2 aplikačných kontajneroch (`backend`, `frontend`) + `postgres`. Admin SPA je zabudovaná do frontend image pod `/admin/` a zdieľa nginx, port aj reverse proxy vhost s hlavnou aplikáciou.
 
 Frontend kontajner obsahuje custom entrypoint, ktorý pri štarte:
 1. Nahradí branding placeholdery v JS/HTML súboroch hodnotami z environment premenných (runtime substitúcia)
@@ -273,7 +272,7 @@ Voliteľné obmedzenie počtu stiahnutí na zdieľanie:
 
 ## Admin konzola
 
-Samostatná React/Vite aplikácia (`admin/`) nasadená ako osobitný Docker kontajner na porte 8084.
+Samostatná React/Vite aplikácia (`admin/`), ktorá sa builduje v rámci frontend Docker image (multi-stage build) a nginx ju servíruje pod sub-cestou `/admin/` na rovnakom hoste a porte ako hlavnú aplikáciu. Vite `base: "/admin/"` a React Router `basename="/admin"` zabezpečujú správne načítavanie assetov a routovanie.
 
 ### Autentifikácia a autorizácia
 
