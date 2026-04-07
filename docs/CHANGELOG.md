@@ -1,6 +1,6 @@
 # FileDrop — Changelog
 
-## [Unreleased]
+## [1.1.0] - 2026-04-07
 
 ### BREAKING
 - **Admin konzola zlúčená do frontend kontajnera** — admin SPA sa už nebuilduje ako samostatný Docker image. Beží pod sub-cestou `/admin/` na rovnakom hoste/porte ako hlavná aplikácia (`https://filedrop.example.com/admin/`). Reverse proxy potrebuje len jeden vhost namiesto dvoch.
