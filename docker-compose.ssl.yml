@@ -1,0 +1,22 @@
+# =============================================================================
+# SSL override — use only when SSL_MODE=docker (frontend container terminates SSL).
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.ssl.yml up -d
+#
+# Or set in .env to apply automatically with plain `docker compose up -d`:
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.ssl.yml
+#
+# Required .env variables:
+#   SSL_MODE=docker
+#   SSL_CERT_PATH=./certs/cert.pem
+#   SSL_KEY_PATH=./certs/key.pem
+# =============================================================================
+
+services:
+  frontend:
+    ports:
+      - "${APP_SSL_PORT:-8443}:443"
+    volumes:
+      - ${SSL_CERT_PATH}:/etc/nginx/ssl/cert.pem:ro
+      - ${SSL_KEY_PATH}:/etc/nginx/ssl/key.pem:ro

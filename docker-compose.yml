@@ -55,8 +55,8 @@ services:
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/Dockerfile
       args:
         VITE_COMPANY_LOGO_URL: ${VITE_COMPANY_LOGO_URL:-}
         VITE_COMPANY_NAME: ${VITE_COMPANY_NAME:-FileDrop}
@@ -69,22 +69,6 @@ services:
       VITE_COMPANY_LOGO_URL: ${VITE_COMPANY_LOGO_URL:-}
     ports:
       - "${APP_PORT:-8080}:80"
-      - "${APP_SSL_PORT:-8443}:443"
-    volumes:
-      - ./nginx/nginx-http.conf:/etc/nginx/conf.d/nginx-http.conf:ro
-      - ./nginx/nginx-ssl.conf:/etc/nginx/conf.d/nginx-ssl.conf:ro
-      - ${SSL_CERT_PATH:-./nginx/no-cert.pem}:/etc/nginx/ssl/cert.pem:ro
-      - ${SSL_KEY_PATH:-./nginx/no-cert.pem}:/etc/nginx/ssl/key.pem:ro
-
-  admin:
-    build:
-      context: ./admin
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    depends_on:
-      - backend
-    ports:
-      - "${ADMIN_PORT:-8084}:80"
 
 volumes:
   pgdata:
