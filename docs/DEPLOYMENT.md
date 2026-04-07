@@ -2,6 +2,44 @@
 
 FileDrop supports two SSL modes controlled by the `SSL_MODE` environment variable in `.env`.
 
+## Verzovanie Docker images
+
+`docker-compose.prod.yml` referencuje image z GHCR cez premennú `FILEDROP_VERSION` z `.env`:
+
+```yaml
+image: ghcr.io/jakicuk/filedrop-backend:${FILEDROP_VERSION:-latest}
+```
+
+Hodnoty, ktoré môžeš nastaviť do `.env`:
+
+| Hodnota | Význam | Použitie |
+|---------|--------|----------|
+| `latest` | Vždy najnovší build z `main` | dev / test |
+| `1.2`    | Najnovší patch v rade `1.2.x` (auto bug‑fixy, žiadne breaking) | **odporúčané pre produkciu** |
+| `1.2.3`  | Presne táto verzia, nikdy iná | striktný rollback / audit |
+
+CI workflow (`.github/workflows/release.yml`) pri každom git tagu `v*` automaticky pushne všetky tri varianty (`1.2.3`, `1.2`, `latest`) do GHCR pre každý z troch image (`backend`, `frontend`, `admin`).
+
+### Update na novú verziu
+
+```bash
+# 1. (voliteľné) zmeniť FILEDROP_VERSION v .env, ak chceš major upgrade
+# 2. stiahnuť novú verziu image-ov
+docker compose pull
+# 3. recreate kontajnerov s novými image
+docker compose up -d
+```
+
+`docker compose pull` je nutný — bez neho Docker použije lokálne uloženú verziu, aj keď CI medzitým pushol nový build.
+
+### Rollback
+
+Zmeň `FILEDROP_VERSION` v `.env` na konkrétnu staršiu patch verziu (napr. `1.2.3`) a spusti `docker compose pull && docker compose up -d`.
+
+**Pozor:** Ak novšia verzia spustila non‑backward‑compatible Prisma migráciu, samotný image rollback neopraví schému databázy. Pri väčších upgrade‑och vždy najprv overiť v `prisma/migrations/` a `docs/CHANGELOG.md`.
+
+---
+
 ## Branding
 
 Aplikácia podporuje konfigurovateľný branding cez `.env`:

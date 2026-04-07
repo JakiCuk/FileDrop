@@ -15,7 +15,7 @@ services:
       retries: 5
 
   backend:
-    image: ghcr.io/jakicuk/filedrop-backend:latest
+    image: ghcr.io/jakicuk/filedrop-backend:${FILEDROP_VERSION:-latest}
     env_file: .env
     restart: unless-stopped
     depends_on:
@@ -51,7 +51,7 @@ services:
       - uploads:/data/uploads
 
   frontend:
-    image: ghcr.io/jakicuk/filedrop-frontend:latest
+    image: ghcr.io/jakicuk/filedrop-frontend:${FILEDROP_VERSION:-latest}
     restart: unless-stopped
     depends_on:
       - backend
@@ -69,7 +69,7 @@ services:
       - ${SSL_KEY_PATH:-./nginx/no-cert.pem}:/etc/nginx/ssl/key.pem:ro
 
   admin:
-    image: ghcr.io/jakicuk/filedrop-admin:latest
+    image: ghcr.io/jakicuk/filedrop-admin:${FILEDROP_VERSION:-latest}
     restart: unless-stopped
     depends_on:
       - backend

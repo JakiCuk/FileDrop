@@ -1,5 +1,11 @@
 # FileDrop — Changelog
 
+## [Unreleased]
+
+### Zmeny
+- **Verzované Docker tagy** — `docker-compose.prod.yml` referencuje image cez premennú `FILEDROP_VERSION` (default `latest`). Umožňuje pripnúť produkciu na konkrétnu verziu (`1.2`, `1.2.3`) a robiť deterministický rollback. Detaily v `docs/DEPLOYMENT.md`.
+- **`.env.example`** — pridaná premenná `FILEDROP_VERSION` s vysvetľujúcim komentárom.
+
 ## [1.0.1] - 2026-04-02
 
 ### Zmeny
