@@ -33,6 +33,11 @@ export const config = {
     host: process.env.SMTP_HOST || "smtp.office365.com",
     port: parseInt(process.env.SMTP_PORT || "587", 10),
     from: process.env.SMTP_FROM || "noreply@sharedrop.local",
+    fromName: process.env.SMTP_FROM_NAME || "",
+    /** Formatted "Name <addr>" for sendMail; falls back to bare address if no name set. */
+    get fromFormatted() {
+      return this.fromName ? `"${this.fromName}" <${this.from}>` : this.from;
+    },
     user: process.env.SMTP_USER || "",
     pass: process.env.SMTP_PASS || "",
     /** Set to false when connecting via IP to a server with DNS-name cert (e.g. internal SMTP) */

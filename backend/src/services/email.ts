@@ -103,7 +103,7 @@ export async function sendReplyNotification(
   const expiryText = expiresAt ? L.reply.linkValidity(dateStr) : L.reply.noExpiry;
 
   const mailOptions = {
-    from: config.smtp.from,
+    from: config.smtp.fromFormatted,
     to: ownerEmail,
     subject: L.reply.subject,
     text: `${L.reply.intro}\n\n${L.reply.downloadBtn}: ${shareUrl}\n\n${expiryText}`,
@@ -146,7 +146,7 @@ export async function sendOtpEmail(
   const mins = config.otpExpiryMinutes;
 
   const mailOptions = {
-    from: config.smtp.from,
+    from: config.smtp.fromFormatted,
     to: email,
     subject: L.otp.subject,
     text: `${L.otp.intro}\n\n${code}\n\n${L.otp.validity}: ${mins} min.\n${L.otp.ignore}`,

@@ -174,7 +174,7 @@ export async function sendAdminNotification(
     const { subject, text, html } = buildEmail(type, data);
 
     await t.sendMail({
-      from: config.smtp.from,
+      from: config.smtp.fromFormatted,
       to: adminEmails.join(","),
       subject,
       text,

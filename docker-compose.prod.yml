@@ -35,6 +35,7 @@ services:
       UPLOAD_DIR: /data/uploads
       SMTP_MODE: ${SMTP_MODE:-none}
       SMTP_FROM: ${SMTP_FROM:-noreply@sharedrop.local}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-}
       SMTP_TLS_REJECT_UNAUTHORIZED: ${SMTP_TLS_REJECT_UNAUTHORIZED:-true}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}

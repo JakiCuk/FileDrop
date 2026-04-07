@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Zmeny
+- **`SMTP_FROM_NAME`** — nová voliteľná premenná pre zobrazované meno odosielateľa v mail klientoch. Ak je nastavená, mail `From` má tvar `"FileDrop" <noreply@example.com>`; ak je prázdna, posiela sa len holá adresa (existujúce správanie). Implementované cez `config.smtp.fromFormatted` a aplikované na OTP, reply-share aj admin notifikácie.
 - **Verzované Docker tagy** — `docker-compose.prod.yml` referencuje image cez premennú `FILEDROP_VERSION` (default `latest`). Umožňuje pripnúť produkciu na konkrétnu verziu (`1.2`, `1.2.3`) a robiť deterministický rollback. Detaily v `docs/DEPLOYMENT.md`.
 - **`.env.example`** — pridaná premenná `FILEDROP_VERSION` s vysvetľujúcim komentárom.
 
