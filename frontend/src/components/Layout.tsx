@@ -8,6 +8,7 @@ declare global {
   interface Window {
     __ENV__?: { VITE_COMPANY_NAME?: string; VITE_COMPANY_LOGO_URL?: string };
   }
+  const __APP_VERSION__: string;
 }
 
 const companyLogoUrl =
@@ -104,6 +105,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         {token && (
           <span> &bull; {t("layout.footerCredit")}</span>
         )}
+        <span> &bull; v{__APP_VERSION__}</span>
       </footer>
     </div>
   );
