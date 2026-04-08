@@ -18,14 +18,6 @@ export const otpRateLimit = rateLimit({
   handler: rateLimitHandler("otp"),
 });
 
-export const uploadRateLimit = rateLimit({
-  windowMs: 60 * 1000,
-  max: 200,
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: rateLimitHandler("upload"),
-});
-
 export const verifyOtpRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
@@ -35,12 +27,12 @@ export const verifyOtpRateLimit = rateLimit({
   handler: rateLimitHandler("verifyOtp"),
 });
 
-export const downloadRateLimit = rateLimit({
+export const fileInitRateLimit = rateLimit({
   windowMs: 60 * 1000,
-  max: 100,
+  max: 60,
   standardHeaders: true,
   legacyHeaders: false,
-  handler: rateLimitHandler("download"),
+  handler: rateLimitHandler("fileInit"),
 });
 
 export const shareCreateRateLimit = rateLimit({

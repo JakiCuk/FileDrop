@@ -4,7 +4,7 @@ import { promises as fsp } from "fs";
 import { PrismaClient } from "@prisma/client";
 import { config } from "../config";
 import { optionalAuth } from "../middleware/auth";
-import { uploadRateLimit, downloadRateLimit } from "../middleware/rateLimit";
+import { fileInitRateLimit } from "../middleware/rateLimit";
 import { getChunkPath } from "../services/storage";
 import { checkDiskSpace } from "../services/diskMonitor";
 import { sendAdminNotification } from "../services/adminNotify";
@@ -21,6 +21,7 @@ function param(val: string | string[] | undefined): string {
 
 router.post(
   "/:slug/files/init",
+  fileInitRateLimit,
   optionalAuth,
   async (req, res) => {
     try {
@@ -93,7 +94,6 @@ router.post(
 router.post(
   "/:slug/files/:fileId/chunks/:index",
   optionalAuth,
-  uploadRateLimit,
   express.raw({ type: "application/octet-stream", limit: `${MAX_CHUNK_BYTES}` }),
   async (req, res) => {
     try {
@@ -247,7 +247,6 @@ router.post(
 
 router.get(
   "/:slug/files/:fileId/chunks/:index",
-  downloadRateLimit,
   async (req, res) => {
     try {
       const slug = param(req.params.slug);
