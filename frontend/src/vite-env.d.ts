@@ -25,6 +25,20 @@ interface ShowSaveFilePickerOptions {
   }>;
 }
 
+interface FileSystemDirectoryHandle {
+  getFileHandle(
+    name: string,
+    options?: { create?: boolean },
+  ): Promise<FileSystemFileHandle>;
+}
+
+interface ShowDirectoryPickerOptions {
+  id?: string;
+  mode?: "read" | "readwrite";
+  startIn?: string;
+}
+
 interface Window {
   showSaveFilePicker(options?: ShowSaveFilePickerOptions): Promise<FileSystemFileHandle>;
+  showDirectoryPicker(options?: ShowDirectoryPickerOptions): Promise<FileSystemDirectoryHandle>;
 }

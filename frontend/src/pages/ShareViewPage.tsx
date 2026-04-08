@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api, ApiError } from "../services/api";
@@ -11,6 +11,8 @@ import {
   decryptFileName,
   downloadFileDecrypted,
   downloadFileStreaming,
+  downloadFileToWritable,
+  supportsDirectoryPicker,
   supportsStreamingDownload,
   triggerDownload,
   type ShareFileInfo,
@@ -53,6 +55,13 @@ export default function ShareViewPage() {
 
   const [downloading, setDownloading] = useState<string | null>(null);
   const [dlProgress, setDlProgress] = useState<DownloadProgress | null>(null);
+  const [batchDownloading, setBatchDownloading] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(
+    null,
+  );
+  const abortRef = useRef<AbortController | null>(null);
+  const uploadAbortRef = useRef<AbortController | null>(null);
+  const currentUploadRef = useRef<{ slug: string; fileId: string } | null>(null);
 
   const [uploading, setUploading] = useState(false);
   const [uploadPercent, setUploadPercent] = useState(0);
@@ -111,6 +120,8 @@ export default function ShareViewPage() {
       if (!proceed) return;
     }
 
+    const controller = new AbortController();
+    abortRef.current = controller;
     setDownloading(file.info.id);
     setDlProgress(null);
 
@@ -122,6 +133,7 @@ export default function ShareViewPage() {
           file.name,
           cryptoKey,
           (p) => setDlProgress(p),
+          controller.signal,
         );
       } else {
         const blob = await downloadFileDecrypted(
@@ -129,17 +141,104 @@ export default function ShareViewPage() {
           file.info,
           cryptoKey,
           (p) => setDlProgress(p),
+          controller.signal,
         );
         triggerDownload(blob, file.name);
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {
-        // User cancelled the save dialog
+        // User cancelled the save dialog or pressed Cancel
       } else {
         setError(err instanceof Error ? err.message : t("share.downloadFailed"));
       }
     } finally {
+      abortRef.current = null;
       setDownloading(null);
+      setDlProgress(null);
+    }
+  };
+
+  const handleCancelDownload = () => {
+    abortRef.current?.abort();
+  };
+
+  const handleDownloadAll = async () => {
+    if (!cryptoKey || !slug || decryptedFiles.length === 0) return;
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setError("");
+
+    if (supportsDirectoryPicker()) {
+      let dirHandle: FileSystemDirectoryHandle;
+      try {
+        dirHandle = await window.showDirectoryPicker({ mode: "readwrite" });
+      } catch (err) {
+        abortRef.current = null;
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setError(err instanceof Error ? err.message : t("share.downloadFailed"));
+        return;
+      }
+
+      setBatchDownloading(true);
+      try {
+        for (let i = 0; i < decryptedFiles.length; i++) {
+          if (controller.signal.aborted) break;
+          const file = decryptedFiles[i];
+          setBatchProgress({ current: i + 1, total: decryptedFiles.length });
+          setDlProgress(null);
+
+          const fileHandle = await dirHandle.getFileHandle(file.name, {
+            create: true,
+          });
+          const writable = await fileHandle.createWritable();
+          await downloadFileToWritable(
+            slug,
+            file.info,
+            cryptoKey,
+            writable,
+            (p) => setDlProgress(p),
+            controller.signal,
+          );
+        }
+      } catch (err) {
+        if (!(err instanceof DOMException && err.name === "AbortError")) {
+          setError(err instanceof Error ? err.message : t("share.downloadFailed"));
+        }
+      } finally {
+        abortRef.current = null;
+        setBatchDownloading(false);
+        setBatchProgress(null);
+        setDlProgress(null);
+      }
+      return;
+    }
+
+    // Fallback: sequential in-memory downloads triggering Save As dialogs.
+    setBatchDownloading(true);
+    try {
+      for (let i = 0; i < decryptedFiles.length; i++) {
+        if (controller.signal.aborted) break;
+        const file = decryptedFiles[i];
+        setBatchProgress({ current: i + 1, total: decryptedFiles.length });
+        setDlProgress(null);
+        const blob = await downloadFileDecrypted(
+          slug,
+          file.info,
+          cryptoKey,
+          (p) => setDlProgress(p),
+          controller.signal,
+        );
+        triggerDownload(blob, file.name);
+      }
+    } catch (err) {
+      if (!(err instanceof DOMException && err.name === "AbortError")) {
+        setError(err instanceof Error ? err.message : t("share.downloadFailed"));
+      }
+    } finally {
+      abortRef.current = null;
+      setBatchDownloading(false);
+      setBatchProgress(null);
       setDlProgress(null);
     }
   };
@@ -149,6 +248,8 @@ export default function ShareViewPage() {
     setUploading(true);
     setUploadPercent(0);
     setError("");
+    const controller = new AbortController();
+    uploadAbortRef.current = controller;
 
     try {
       const replyKey = await generateEncryptionKey();
@@ -157,6 +258,7 @@ export default function ShareViewPage() {
       const { slug: replySlug } = await api.post<{ slug: string; expiresAt: string | null }>(
         `/api/shares/${slug}/reply`,
         {},
+        controller.signal,
       );
 
       const totalSize = newFiles.reduce((s, f) => s + f.size, 0);
@@ -175,23 +277,46 @@ export default function ShareViewPage() {
           },
           i,
           newFiles.length,
+          controller.signal,
+          (fileId) => {
+            currentUploadRef.current = { slug: replySlug, fileId };
+          },
         );
+        currentUploadRef.current = null;
         uploaded += file.size;
       }
 
       const shareUrl = `${window.location.origin}/s/${replySlug}#${replyKeyBase64}`;
-      await api.post(`/api/shares/${replySlug}/notify-owner`, {
-        shareUrl,
-        locale: getEmailLocale(i18n.language),
-      });
+      await api.post(
+        `/api/shares/${replySlug}/notify-owner`,
+        {
+          shareUrl,
+          locale: getEmailLocale(i18n.language),
+        },
+        controller.signal,
+      );
 
       setUploadDone(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("share.uploadFailed"));
+      const partial = currentUploadRef.current;
+      if (partial) {
+        api.del(`/api/shares/${partial.slug}/files/${partial.fileId}`).catch(() => {});
+        currentUploadRef.current = null;
+      }
+      if (err instanceof DOMException && err.name === "AbortError") {
+        // user cancelled
+      } else {
+        setError(err instanceof Error ? err.message : t("share.uploadFailed"));
+      }
     } finally {
+      uploadAbortRef.current = null;
       setUploading(false);
       setUploadPercent(0);
     }
+  };
+
+  const handleCancelRecipientUpload = () => {
+    uploadAbortRef.current?.abort();
   };
 
   function formatSize(bytes: number | string): string {
@@ -250,6 +375,24 @@ export default function ShareViewPage() {
         </p>
       )}
 
+      {decryptedFiles.length > 1 && (
+        <div className="flex flex-col items-end gap-1">
+          <button
+            onClick={handleDownloadAll}
+            disabled={batchDownloading || downloading !== null}
+            title={supportsDirectoryPicker() ? t("share.downloadAllHint") : undefined}
+            className="text-sm font-medium text-brand-600 hover:text-brand-800 disabled:opacity-50 transition"
+          >
+            {batchDownloading ? t("share.downloading") : t("share.downloadAll")}
+          </button>
+          {supportsDirectoryPicker() && (
+            <p className="text-xs text-gray-400 text-right max-w-xs">
+              {t("share.downloadAllHint")}
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="border border-gray-200 rounded-xl divide-y divide-gray-100 bg-white">
         {decryptedFiles.length === 0 ? (
           <p className="text-center text-gray-400 py-8">{t("share.noFiles")}</p>
@@ -288,7 +431,7 @@ export default function ShareViewPage() {
 
               <button
                 onClick={() => handleDownload(file)}
-                disabled={downloading === file.info.id}
+                disabled={downloading !== null || batchDownloading}
                 className="text-brand-600 hover:text-brand-800 font-medium text-sm
                   disabled:opacity-50 transition flex-shrink-0 ml-4"
               >
@@ -299,11 +442,32 @@ export default function ShareViewPage() {
         )}
       </div>
 
-      {downloading && dlProgress && (
-        <ProgressBar
-          percent={(dlProgress.chunkIndex / dlProgress.totalChunks) * 100}
-          label={t("share.downloadProgress")}
-        />
+      {(downloading || batchDownloading) && (
+        <div className="space-y-2">
+          <ProgressBar
+            percent={
+              dlProgress
+                ? (dlProgress.chunkIndex / dlProgress.totalChunks) * 100
+                : 0
+            }
+            label={
+              batchProgress
+                ? t("share.batchProgress", {
+                    current: batchProgress.current,
+                    total: batchProgress.total,
+                  })
+                : t("share.downloadProgress")
+            }
+          />
+          <div className="flex justify-end">
+            <button
+              onClick={handleCancelDownload}
+              className="text-sm text-gray-500 hover:text-red-600 transition"
+            >
+              {t("share.cancel")}
+            </button>
+          </div>
+        </div>
       )}
 
       {share?.allowRecipientUpload && !uploadDone && (
@@ -313,7 +477,17 @@ export default function ShareViewPage() {
           </h2>
           <FileDropzone onFiles={handleRecipientUpload} disabled={uploading} />
           {uploading && (
-            <ProgressBar percent={uploadPercent} label={t("share.encryptingUploading")} />
+            <div className="space-y-2">
+              <ProgressBar percent={uploadPercent} label={t("share.encryptingUploading")} />
+              <div className="flex justify-end">
+                <button
+                  onClick={handleCancelRecipientUpload}
+                  className="text-sm text-gray-500 hover:text-red-600 transition"
+                >
+                  {t("share.cancel")}
+                </button>
+              </div>
+            </div>
           )}
         </div>
       )}

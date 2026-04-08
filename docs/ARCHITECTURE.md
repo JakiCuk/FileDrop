@@ -182,16 +182,17 @@ Kompletný návod: [DEPLOYMENT.md](DEPLOYMENT.md)
 - Base64 validácia pre chunk IV hlavičky
 
 ### Rate limiting
-6 rate limiterov na ochranu proti brute-force a DoS:
+5 rate limiterov na ochranu proti brute-force a DoS:
 
 | Limiter | Endpoint | Limit | Účel |
 |---------|----------|-------|------|
 | `otpRateLimit` | POST /auth/request-otp | 5 req / 15 min | OTP spam prevencia |
 | `verifyOtpRateLimit` | POST /auth/verify-otp | 10 req / 15 min | Brute-force ochrana |
-| `uploadRateLimit` | POST /:slug/files/:id/chunks/:idx | 200 req / min | Upload throttling |
-| `downloadRateLimit` | GET /:slug/files/:id/chunks/:idx | 100 req / min | Download DoS prevencia |
+| `fileInitRateLimit` | POST /:slug/files/init | 60 req / min | Limit počtu nových súborov |
 | `shareCreateRateLimit` | POST /shares | 20 req / min | Mass share creation |
 | `adminRateLimit` | /api/admin/* | 60 req / min | Admin endpoint ochrana |
+
+Poznámka: chunk endpointy (`POST .../chunks/:idx`, `GET .../chunks/:idx`) **nemajú** per-request rate limit. Pôvodné `uploadRateLimit`/`downloadRateLimit` boli odstránené, lebo pri 5 MB chunkoch každý súbor > ~1 GB narazil na 429. Abuse je krytý cez `fileInitRateLimit`, `shareCreateRateLimit`, `maxFileSizeMb`, validáciu `chunkCount`, `share.maxDownloads` a kontrolu voľného miesta na disku.
 
 ### Bezpečnostné hlavičky
 
@@ -209,7 +210,7 @@ Kompletný návod: [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ### Path traversal ochrana
 - Funkcia `safePath()` v `storage.ts` — `path.resolve().startsWith()` kontrola
-- Všetky prístupy k súborovom systému prechádzajú cez `safePath` (getShareDir, getFileDir, deleteShareDir)
+- Všetky prístupy k súborovom systému prechádzajú cez `safePath` (getShareDir, getFileDir, deleteShareDir, deleteFileDir)
 - Prevencia proti `../` v shareId alebo fileId parametroch
 
 ### XSS ochrana
@@ -293,4 +294,4 @@ Cron joby sú spravované centrálnym registrom (`cronRegistry.ts`):
 - Rozvrhy sa ukladajú v tabuľke `cron_jobs` (persistentné medzi reštartmi)
 - Editácia cez admin UI: každých N hodín / denne / vlastný cron výraz
 - Aktivácia/deaktivácia a manuálne spustenie
-- Aktuálne registrované joby: `cleanup` (mazanie expirovaných shares), `daily-stats` (denný snapshot štatistík) a `disk-monitor` (kontrola voľného miesta na disku)
+- Aktuálne registrované joby: `cleanup` (mazanie expirovaných shares + nedokončených uploadov starších ako 24 h), `daily-stats` (denný snapshot štatistík) a `disk-monitor` (kontrola voľného miesta na disku)

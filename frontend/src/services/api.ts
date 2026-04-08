@@ -30,11 +30,12 @@ class ApiClient {
     return res.json();
   }
 
-  async post<T = unknown>(path: string, body: unknown): Promise<T> {
+  async post<T = unknown>(path: string, body: unknown, signal?: AbortSignal): Promise<T> {
     const res = await fetch(path, {
       method: "POST",
       headers: { ...this.authHeaders(), "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      signal,
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({ error: res.statusText }));
@@ -59,6 +60,7 @@ class ApiClient {
     path: string,
     data: ArrayBuffer,
     iv: string,
+    signal?: AbortSignal,
   ): Promise<{ chunkIndex: number; size: number }> {
     const res = await fetch(path, {
       method: "POST",
@@ -68,6 +70,7 @@ class ApiClient {
         "X-Chunk-IV": iv,
       },
       body: data,
+      signal,
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({ error: res.statusText }));
@@ -78,8 +81,9 @@ class ApiClient {
 
   async downloadChunk(
     path: string,
+    signal?: AbortSignal,
   ): Promise<{ data: ArrayBuffer; iv: string }> {
-    const res = await fetch(path, { headers: this.authHeaders() });
+    const res = await fetch(path, { headers: this.authHeaders(), signal });
     if (!res.ok) {
       const body = await res.json().catch(() => ({ error: res.statusText }));
       throw new ApiError(res.status, body.error || res.statusText);

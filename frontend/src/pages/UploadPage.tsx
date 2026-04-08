@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { api, ApiError } from "../services/api";
 import {
@@ -36,6 +36,8 @@ export default function UploadPage() {
   const [overallPercent, setOverallPercent] = useState(0);
   const [shareUrl, setShareUrl] = useState("");
   const [error, setError] = useState("");
+  const uploadAbortRef = useRef<AbortController | null>(null);
+  const currentUploadRef = useRef<{ slug: string; fileId: string } | null>(null);
 
   const handleFiles = useCallback((newFiles: File[]) => {
     setFiles((prev) => [...prev, ...newFiles]);
@@ -49,17 +51,23 @@ export default function UploadPage() {
     if (files.length === 0) return;
     setError("");
     setStage("uploading");
+    const controller = new AbortController();
+    uploadAbortRef.current = controller;
 
     try {
       const encryptionKey = await generateEncryptionKey();
       const keyBase64 = await exportKeyToBase64(encryptionKey);
 
-      const { slug } = await api.post<{ slug: string }>("/api/shares", {
-        allowRecipientUpload: allowUpload,
-        expiresInDays: expiryDays,
-        maxDownloads: maxDownloads === "" || maxDownloads === 0 ? null : maxDownloads,
-        locale: i18n.language,
-      });
+      const { slug } = await api.post<{ slug: string }>(
+        "/api/shares",
+        {
+          allowRecipientUpload: allowUpload,
+          expiresInDays: expiryDays,
+          maxDownloads: maxDownloads === "" || maxDownloads === 0 ? null : maxDownloads,
+          locale: i18n.language,
+        },
+        controller.signal,
+      );
 
       const totalSize = files.reduce((s, f) => s + f.size, 0);
       let uploadedTotal = 0;
@@ -78,7 +86,12 @@ export default function UploadPage() {
           },
           i,
           files.length,
+          controller.signal,
+          (fileId) => {
+            currentUploadRef.current = { slug, fileId };
+          },
         );
+        currentUploadRef.current = null;
         uploadedTotal += file.size;
       }
 
@@ -86,13 +99,28 @@ export default function UploadPage() {
       setShareUrl(url);
       setStage("done");
     } catch (err) {
-      if (err instanceof ApiError && err.status === 507) {
+      const partial = currentUploadRef.current;
+      if (partial) {
+        api.del(`/api/shares/${partial.slug}/files/${partial.fileId}`).catch(() => {});
+        currentUploadRef.current = null;
+      }
+      if (err instanceof DOMException && err.name === "AbortError") {
+        // user cancelled
+      } else if (err instanceof ApiError && err.status === 507) {
         setError(t("upload.diskFull"));
       } else {
         setError(err instanceof Error ? err.message : t("upload.uploadFailed"));
       }
       setStage("select");
+      setProgress(null);
+      setOverallPercent(0);
+    } finally {
+      uploadAbortRef.current = null;
     }
+  };
+
+  const handleCancelUpload = () => {
+    uploadAbortRef.current?.abort();
   };
 
   const copyLink = () => {
@@ -263,6 +291,14 @@ export default function UploadPage() {
                 percent={(progress.chunkIndex / progress.totalChunks) * 100}
                 label={progress.fileName}
               />
+              <div className="flex justify-end">
+                <button
+                  onClick={handleCancelUpload}
+                  className="text-sm text-gray-500 hover:text-red-600 transition"
+                >
+                  {t("share.cancel")}
+                </button>
+              </div>
             </div>
           )}
 

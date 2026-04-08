@@ -5,7 +5,7 @@ import { PrismaClient } from "@prisma/client";
 import { config } from "../config";
 import { optionalAuth } from "../middleware/auth";
 import { fileInitRateLimit } from "../middleware/rateLimit";
-import { getChunkPath } from "../services/storage";
+import { getChunkPath, deleteFileDir } from "../services/storage";
 import { checkDiskSpace } from "../services/diskMonitor";
 import { sendAdminNotification } from "../services/adminNotify";
 import { isValidSlug, isValidUuid, isValidBase64, sanitizeString, isPositiveInt } from "../middleware/validate";
@@ -335,10 +335,7 @@ router.delete(
       }
 
       const isOwner = req.user?.userId === share.userId;
-      if (!isOwner) {
-        res.status(403).json({ error: "Only the share owner can delete files" });
-        return;
-      }
+      const isReplyShare = !!share.parentShareId;
 
       const file = await prisma.fileRecord.findFirst({
         where: { id: fileId, shareId: share.id },
@@ -349,11 +346,20 @@ router.delete(
         return;
       }
 
-      const chunks = await prisma.chunk.findMany({ where: { fileId } });
-      for (const chunk of chunks) {
-        await fsp.unlink(chunk.storagePath).catch(() => {})
+      // Owner môže mazať čokoľvek. Ne-owner (recipient/reply uploader)
+      // môže mazať iba vlastný incomplete upload (cancel scenár).
+      if (!isOwner) {
+        if (file.completed) {
+          res.status(403).json({ error: "Only the share owner can delete completed files" });
+          return;
+        }
+        if (!share.allowRecipientUpload && !isReplyShare) {
+          res.status(403).json({ error: "Not allowed" });
+          return;
+        }
       }
 
+      deleteFileDir(share.id, file.id);
       await prisma.fileRecord.delete({ where: { id: fileId } });
 
       res.json({ message: "File deleted" });

@@ -292,16 +292,24 @@ Označí upload súboru ako dokončený.
 
 ### DELETE /api/shares/:slug/files/:fileId
 
-Zmaže konkrétny súbor zo zdieľania. Vyžaduje JWT vlastníka.
+Zmaže konkrétny súbor zo zdieľania.
 
-**Headers:** `Authorization: Bearer <token>`
+**Headers:** `Authorization: Bearer <token>` (voliteľné — potrebné iba pre vlastníka)
+
+**Autorizácia:**
+- **Vlastník share** (JWT) — môže zmazať akýkoľvek súbor (completed aj incomplete).
+- **Anonymný / recipient** — môže zmazať **iba incomplete súbor** (`completed=false`) a iba na zdieľaní s `allowRecipientUpload=true` alebo na reply share. Toto využíva frontend pri zrušení rozbehnutého uploadu (Cancel tlačidlo).
 
 **Response 200:**
 ```json
 { "message": "File deleted" }
 ```
 
-Odstráni záznam `FileRecord`, všetky `Chunk` záznamy a šifrované chunky z disku.
+**Response 403:** Pokus zmazať completed súbor bez owner JWT, alebo upload nie je povolený pre príjemcu.
+
+**Response 404:** Share alebo file neexistuje.
+
+Odstráni `FileRecord` riadok a celú `{shareId}/{fileId}` zložku z disku (vrátane všetkých chunkov).
 
 ---
 
@@ -537,8 +545,7 @@ Všetky endpointy sú chránené rate limitmi. Odpoveď 429 obsahuje `RateLimit-
 | POST /api/auth/request-otp | 5 req / 15 min | email alebo IP |
 | POST /api/auth/verify-otp | 10 req / 15 min | email alebo IP |
 | POST /api/shares | 20 req / min | IP |
-| POST /api/shares/:slug/files/:id/chunks/:idx | 200 req / min | IP |
-| GET /api/shares/:slug/files/:id/chunks/:idx | 100 req / min | IP |
+| POST /api/shares/:slug/files/init | 60 req / min | IP |
 | /api/admin/* | 60 req / min | IP |
 
 ---

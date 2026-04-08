@@ -38,6 +38,13 @@ export function getChunkPath(shareId: string, fileId: string, chunkIndex: number
   return path.join(dir, `chunk_${chunkIndex.toString().padStart(6, "0")}`);
 }
 
+export function deleteFileDir(shareId: string, fileId: string): void {
+  const dir = safePath(config.uploadDir, shareId, fileId);
+  if (fs.existsSync(dir)) {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
 export function deleteShareDir(shareId: string): void {
   const dir = safePath(config.uploadDir, shareId);
   if (fs.existsSync(dir)) {

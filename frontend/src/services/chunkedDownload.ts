@@ -20,6 +20,11 @@ export function supportsStreamingDownload(): boolean {
   return typeof window.showSaveFilePicker === "function";
 }
 
+export function supportsDirectoryPicker(): boolean {
+  return typeof (window as unknown as { showDirectoryPicker?: unknown })
+    .showDirectoryPicker === "function";
+}
+
 export async function decryptFileName(
   key: CryptoKey,
   encryptedName: string,
@@ -28,6 +33,12 @@ export async function decryptFileName(
     return await decryptString(key, encryptedName);
   } catch {
     return "unknown-file";
+  }
+}
+
+function throwIfAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) {
+    throw new DOMException("Aborted", "AbortError");
   }
 }
 
@@ -42,29 +53,86 @@ export async function downloadFileStreaming(
   fileName: string,
   key: CryptoKey,
   onProgress?: (p: DownloadProgress) => void,
+  signal?: AbortSignal,
 ): Promise<void> {
   const handle = await window.showSaveFilePicker({
     suggestedName: fileName,
   });
   const writable = await handle.createWritable();
 
+  let aborted = false;
   try {
-    for (let i = 0; i < file.chunkCount; i++) {
-      const { data, iv } = await api.downloadChunk(
-        `/api/shares/${slug}/files/${file.id}/chunks/${i}`,
-      );
-
-      const decrypted = await decryptChunk(key, iv, data);
-      await writable.write(decrypted);
-
-      onProgress?.({
-        fileId: file.id,
-        chunkIndex: i + 1,
-        totalChunks: file.chunkCount,
-      });
+    await writeChunksToWritable(slug, file, key, writable, onProgress, signal);
+  } catch (err) {
+    aborted = true;
+    try {
+      await writable.abort();
+    } catch {
+      // ignore
     }
+    throw err;
   } finally {
-    await writable.close();
+    if (!aborted) {
+      await writable.close();
+    }
+  }
+}
+
+/**
+ * Like downloadFileStreaming, but accepts a pre-opened writable (e.g. obtained
+ * from a directory handle). Used by "download all" to write many files into a
+ * folder selected once by the user.
+ */
+export async function downloadFileToWritable(
+  slug: string,
+  file: ShareFileInfo,
+  key: CryptoKey,
+  writable: FileSystemWritableFileStream,
+  onProgress?: (p: DownloadProgress) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  let aborted = false;
+  try {
+    await writeChunksToWritable(slug, file, key, writable, onProgress, signal);
+  } catch (err) {
+    aborted = true;
+    try {
+      await writable.abort();
+    } catch {
+      // ignore
+    }
+    throw err;
+  } finally {
+    if (!aborted) {
+      await writable.close();
+    }
+  }
+}
+
+async function writeChunksToWritable(
+  slug: string,
+  file: ShareFileInfo,
+  key: CryptoKey,
+  writable: FileSystemWritableFileStream,
+  onProgress?: (p: DownloadProgress) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  for (let i = 0; i < file.chunkCount; i++) {
+    throwIfAborted(signal);
+    const { data, iv } = await api.downloadChunk(
+      `/api/shares/${slug}/files/${file.id}/chunks/${i}`,
+      signal,
+    );
+
+    const decrypted = await decryptChunk(key, iv, data);
+    throwIfAborted(signal);
+    await writable.write(decrypted);
+
+    onProgress?.({
+      fileId: file.id,
+      chunkIndex: i + 1,
+      totalChunks: file.chunkCount,
+    });
   }
 }
 
@@ -77,12 +145,15 @@ export async function downloadFileDecrypted(
   file: ShareFileInfo,
   key: CryptoKey,
   onProgress?: (p: DownloadProgress) => void,
+  signal?: AbortSignal,
 ): Promise<Blob> {
   const chunks: ArrayBuffer[] = [];
 
   for (let i = 0; i < file.chunkCount; i++) {
+    throwIfAborted(signal);
     const { data, iv } = await api.downloadChunk(
       `/api/shares/${slug}/files/${file.id}/chunks/${i}`,
+      signal,
     );
 
     const decrypted = await decryptChunk(key, iv, data);
