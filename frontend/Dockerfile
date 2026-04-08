@@ -17,9 +17,7 @@ WORKDIR /app
 COPY frontend/package.json ./
 RUN npm install
 COPY frontend/ ./
-RUN VITE_COMPANY_LOGO_URL="__VITE_COMPANY_LOGO_URL__" \
-    VITE_COMPANY_NAME="__VITE_COMPANY_NAME__" \
-    npm run build
+RUN npm run build
 
 # --- Stage 3: nginx runtime --------------------------------------------------
 FROM nginx:alpine

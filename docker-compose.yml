@@ -57,9 +57,6 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
-      args:
-        VITE_COMPANY_LOGO_URL: ${VITE_COMPANY_LOGO_URL:-}
-        VITE_COMPANY_NAME: ${VITE_COMPANY_NAME:-FileDrop}
     restart: unless-stopped
     depends_on:
       - backend

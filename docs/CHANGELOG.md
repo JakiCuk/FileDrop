@@ -1,5 +1,18 @@
 # FileDrop — Changelog
 
+## [1.1.1] - 2026-04-08
+
+### Fixed
+- **Header logo zobrazoval broken-image ikonu pri default configu** — `frontend/Dockerfile` buildol SPA s `VITE_COMPANY_LOGO_URL="__VITE_COMPANY_LOGO_URL__"` ako placeholder, ale Vite inlinuje `import.meta.env.VITE_*` ako konštanty pri builde, takže ternárka v `Layout.tsx` sa constant-foldla na `<img>` vetvu a vstavané SVG fallback úplne zmizlo z bundlu. Runtime sed v entrypointe potom nahradil placeholder za prázdny string → `<img src="">` → broken icon vedľa textu "FileDrop". Vedľajším dôsledkom bolo, že **runtime branding cez docker env premenné vôbec nefungoval**, hoci entrypoint to predstieral.
+
+### Changed
+- **Branding prepnutý na runtime injection cez `window.__ENV__`** — entrypoint pri štarte kontajnera generuje `/usr/share/nginx/html/env.js` s aktuálnymi hodnotami `VITE_COMPANY_NAME` a `VITE_COMPANY_LOGO_URL`. SPA ich číta z `window.__ENV__` (runtime property access, Vite to neinlinuje). Override branding teraz funguje **bez rebuildu** — stačí zmeniť `.env` a `docker compose up -d`.
+- `frontend/Dockerfile`: odstránené `VITE_COMPANY_*` build args z `RUN npm run build`.
+- `docker-compose.yml`: odstránený `args:` blok z `frontend.build` (build args už nie sú potrebné, runtime `environment:` ostáva).
+- `frontend/docker-entrypoint.sh`: namiesto sed-ovania JS bundle generuje `env.js`; vstupné premenné sa escapujú proti JS-injection.
+- `frontend/index.html`: pridaný `<script src="/env.js">` pred `main.tsx`, default `<title>FileDrop</title>`.
+- `frontend/public/env.js`: nový dev fallback s prázdnymi hodnotami.
+
 ## [1.1.0] - 2026-04-07
 
 ### BREAKING

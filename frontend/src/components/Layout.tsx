@@ -4,8 +4,16 @@ import { useAuth } from "../hooks/useAuth";
 import { supportedLanguages } from "../i18n";
 import type { ReactNode } from "react";
 
-const companyLogoUrl = import.meta.env.VITE_COMPANY_LOGO_URL || "";
-const companyName = import.meta.env.VITE_COMPANY_NAME || "FileDrop";
+declare global {
+  interface Window {
+    __ENV__?: { VITE_COMPANY_NAME?: string; VITE_COMPANY_LOGO_URL?: string };
+  }
+}
+
+const companyLogoUrl =
+  (typeof window !== "undefined" && window.__ENV__?.VITE_COMPANY_LOGO_URL) || "";
+const companyName =
+  (typeof window !== "undefined" && window.__ENV__?.VITE_COMPANY_NAME) || "FileDrop";
 
 export default function Layout({ children }: { children: ReactNode }) {
   const { token, user, logout } = useAuth();

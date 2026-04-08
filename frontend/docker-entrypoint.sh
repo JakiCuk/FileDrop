@@ -5,17 +5,25 @@ set -e
 COMPANY_NAME="${VITE_COMPANY_NAME:-FileDrop}"
 LOGO_URL="${VITE_COMPANY_LOGO_URL:-}"
 
+# Escape backslashes and double quotes so values can't break out of the JS string literal
+escape_js() {
+  printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'
+}
+COMPANY_NAME_JS=$(escape_js "$COMPANY_NAME")
+LOGO_URL_JS=$(escape_js "$LOGO_URL")
+
 echo "[FileDrop] Applying branding: name=$COMPANY_NAME, logo=$LOGO_URL"
 
-# Replace placeholders in all JS and HTML files
-find /usr/share/nginx/html -type f \( -name '*.js' -o -name '*.html' \) -exec \
-  sed -i "s|__VITE_COMPANY_NAME__|${COMPANY_NAME}|g" {} +
+# Generate runtime env file consumed by the SPA before main.tsx loads
+cat > /usr/share/nginx/html/env.js <<EOF
+window.__ENV__ = {
+  VITE_COMPANY_NAME: "${COMPANY_NAME_JS}",
+  VITE_COMPANY_LOGO_URL: "${LOGO_URL_JS}"
+};
+EOF
 
-find /usr/share/nginx/html -type f \( -name '*.js' -o -name '*.html' \) -exec \
-  sed -i "s|__VITE_COMPANY_LOGO_URL__|${LOGO_URL}|g" {} +
-
-# Also replace the <title> tag in index.html
-sed -i "s|<title>__VITE_COMPANY_NAME__</title>|<title>${COMPANY_NAME}</title>|g" \
+# Update <title> in index.html (HTML is not bundled, sed is safe here)
+sed -i "s|<title>FileDrop</title>|<title>${COMPANY_NAME}</title>|g" \
   /usr/share/nginx/html/index.html
 
 # --- SSL mode selection ---
