@@ -40,4 +40,33 @@ else
   cp /etc/nginx/conf.d/nginx-http.conf /etc/nginx/nginx.conf
 fi
 
+# --- Real-IP block substitution (TRUSTED_PROXIES / REAL_IP_HEADER) ---
+# When TRUSTED_PROXIES is set, generate set_real_ip_from + real_ip_header directives
+# so nginx rewrites $remote_addr with the actual client IP from a trusted upstream.
+REAL_IP_BLOCK_FILE=/tmp/realip-block.conf
+: > "$REAL_IP_BLOCK_FILE"
+if [ -n "$TRUSTED_PROXIES" ]; then
+  HEADER="${REAL_IP_HEADER:-X-Forwarded-For}"
+  echo "[FileDrop] Real-IP: trusting $TRUSTED_PROXIES, reading header $HEADER"
+  # Split CSV on comma; trim whitespace per item
+  OLD_IFS="$IFS"
+  IFS=','
+  for cidr in $TRUSTED_PROXIES; do
+    trimmed=$(printf '%s' "$cidr" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+    if [ -n "$trimmed" ]; then
+      printf '    set_real_ip_from %s;\n' "$trimmed" >> "$REAL_IP_BLOCK_FILE"
+    fi
+  done
+  IFS="$OLD_IFS"
+  printf '    real_ip_header %s;\n' "$HEADER" >> "$REAL_IP_BLOCK_FILE"
+  printf '    real_ip_recursive on;\n' >> "$REAL_IP_BLOCK_FILE"
+else
+  echo "[FileDrop] Real-IP: TRUSTED_PROXIES not set, real_ip module disabled"
+fi
+# Replace marker line with block content (or empty)
+sed -i "/__REAL_IP_BLOCK__/ {
+    r $REAL_IP_BLOCK_FILE
+    d
+}" /etc/nginx/nginx.conf
+
 exec nginx -g 'daemon off;'

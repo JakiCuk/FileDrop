@@ -103,6 +103,19 @@ Všetky nastavenia sú cez environment premenné v `.env` súbore. Pozri [.env.e
 | `JWT_EXPIRY` | `24h` | Doba platnosti JWT tokenu |
 | `CORS_ORIGIN` | `*` | Povolené originy. V produkcii nastaviť na konkrétnu doménu |
 
+### Client IP za reverse proxy
+
+Ak FileDrop beží za externým reverse proxy, defaultne backend uvidí IP proxy (typicky `172.x` z docker bridge), nie skutočnú IP klienta — `Top IPs` v admin konzole zlúči všetkých klientov a IP-based rate-limity sa kumulujú. Riešenie cez bundled nginx `real_ip` module:
+
+| Premenná | Default | Popis |
+|----------|---------|-------|
+| `TRUSTED_PROXIES` | *(prázdne = vypnuté)* | CSV CIDR/IP upstream proxy, ktorým dôverovať forwarded-IP hlavičke |
+| `REAL_IP_HEADER` | `X-Forwarded-For` | Hlavička, v ktorej upstream nesie klientovu IP (alt: `X-Real-IP`, `CF-Connecting-IP`, ...) |
+| `TRUST_PROXY` | `1` | Express trust-proxy (počet hopov alebo CSV CIDR) |
+| `IP_DEBUG` | `false` | Diagnostický log všetkých IP hlavičiek — pred zapnutím v produkcii zistiť ktorú hlavičku upstream posiela |
+
+Podrobný diagnostický postup a bezpečnostná analýza v [docs/DEPLOYMENT.md → Client IP behind a reverse proxy](docs/DEPLOYMENT.md#client-ip-behind-a-reverse-proxy).
+
 ### Admin konzola
 
 | Premenná | Default | Popis |
@@ -164,7 +177,7 @@ share_app/
 │       ├── routes/       (auth, shares, files, admin)
 │       ├── middleware/   (auth, rateLimit, admin, validate)
 │       ├── services/     (email, storage, cleanup, dailyStats, cronRegistry, diskMonitor, adminNotify, securityLog)
-│       └── utils/        (crypto)
+│       └── utils/        (crypto, clientIp)
 ├── frontend/
 │   ├── Dockerfile
 │   ├── package.json

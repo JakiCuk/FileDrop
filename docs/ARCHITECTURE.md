@@ -182,17 +182,25 @@ Kompletný návod: [DEPLOYMENT.md](DEPLOYMENT.md)
 - Base64 validácia pre chunk IV hlavičky
 
 ### Rate limiting
-5 rate limiterov na ochranu proti brute-force a DoS:
+6 rate limiterov na ochranu proti brute-force a DoS:
 
-| Limiter | Endpoint | Limit | Účel |
-|---------|----------|-------|------|
-| `otpRateLimit` | POST /auth/request-otp | 5 req / 15 min | OTP spam prevencia |
-| `verifyOtpRateLimit` | POST /auth/verify-otp | 10 req / 15 min | Brute-force ochrana |
-| `fileInitRateLimit` | POST /:slug/files/init | 60 req / min | Limit počtu nových súborov |
-| `shareCreateRateLimit` | POST /shares | 20 req / min | Mass share creation |
-| `adminRateLimit` | /api/admin/* | 60 req / min | Admin endpoint ochrana |
+| Limiter | Endpoint | Limit | Kľúč | Účel |
+|---------|----------|-------|------|------|
+| `otpRateLimit` | POST /auth/request-otp | 5 req / 15 min | email alebo IP | OTP spam prevencia |
+| `verifyOtpRateLimit` | POST /auth/verify-otp | 10 req / 15 min | email alebo IP | Brute-force ochrana |
+| `fileInitRateLimit` | POST /:slug/files/init | 60 req / min | IP | Limit počtu nových súborov |
+| `shareCreateRateLimit` | POST /shares | 20 req / min | IP | Mass share creation |
+| `adminRateLimit` | /api/admin/* | 300 req / min | admin email (z JWT) alebo IP | Per-admin ochrana SPA endpointov |
+| `adminWriteRateLimit` | 4 admin write endpointy *(viď nižšie)* | 30 req / min | admin email (z JWT) alebo IP | Prísna poistka proti hromadným deštruktívnym akciám |
+
+`adminWriteRateLimit` sa aplikuje na: `DELETE /api/admin/shares/:slug`, `PUT /api/admin/cron-jobs/:id`, `POST /api/admin/cron-jobs/:id/run`, `POST /api/admin/cleanup/run`.
 
 Poznámka: chunk endpointy (`POST .../chunks/:idx`, `GET .../chunks/:idx`) **nemajú** per-request rate limit. Pôvodné `uploadRateLimit`/`downloadRateLimit` boli odstránené, lebo pri 5 MB chunkoch každý súbor > ~1 GB narazil na 429. Abuse je krytý cez `fileInitRateLimit`, `shareCreateRateLimit`, `maxFileSizeMb`, validáciu `chunkCount`, `share.maxDownloads` a kontrolu voľného miesta na disku.
+
+**Kľúč rate-limitera:**
+- `otp*` — primárne email z requestu (predvídateľný), fallback `getClientIp(req)`.
+- `fileInit`, `shareCreate` — IP cez `getClientIp(req)` (vyžaduje korektne nastavený `TRUSTED_PROXIES` + `REAL_IP_HEADER` ak je nasadené za reverse proxy).
+- `admin*` — email z JWT (dekódovaný bez verifikácie cez `jwt.decode`; `requireAdmin` overí podpis a rolu neskôr). Vďaka tomu má každý admin používateľ vlastný bucket bez ohľadu na IP — admin SPA nemôže limit minúť pre iného admina. Pri request bez tokenu (alebo malformed) fallback na IP.
 
 ### Bezpečnostné hlavičky
 
@@ -225,8 +233,9 @@ Poznámka: chunk endpointy (`POST .../chunks/:idx`, `GET .../chunks/:idx`) **nem
 
 ### Bezpečnostné logovanie
 - Služba `securityLog.ts` — štruktúrované logovanie bezpečnostných udalostí
-- Logované udalosti: neúspešná autentifikácia (401), zamietnutý admin prístup (403), neplatný OTP, neplatné vstupy
+- Logované udalosti: neúspešná autentifikácia (401), zamietnutý admin prístup (403), neplatný OTP, neplatné vstupy, prekročenie rate-limitu
 - Formát: `[SECURITY] event_type { timestamp, ip, method, path, details }`
+- IP klienta sa rozlišuje cez `utils/clientIp.ts → getClientIp(req)` — helper čerpá z `req.ip` (po Express `trust proxy` a nginx `real_ip` module), normalizuje IPv6-mapped IPv4 (`::ffff:1.2.3.4`) a fallback-uje na socket IP. Rovnaký helper používajú aj všetky rate-limit `keyGenerator`-y, takže log a rate-limit vidia identický kľúč.
 
 ### Systémová odolnosť
 - **Disk monitoring** — periodická kontrola voľného miesta, konfigurovateľné prahy (15% warn, 5% block)
@@ -259,7 +268,7 @@ Pre nasadenie v inej organizácii:
 ### Ďalšie
 - **CORS** — konfigurovateľné povolené originy (`CORS_ORIGIN`)
 - **TLS 1.2+** — v Docker SSL režime vynútené moderné šifrovacie protokoly
-- **`trust proxy`** — Express rozpoznáva reálnu IP za reverse proxy
+- **Client IP za reverse proxy** — bundled nginx má cez env premenné (`TRUSTED_PROXIES`, `REAL_IP_HEADER`) zapínateľný `ngx_http_realip_module`, ktorý prepíše `$remote_addr` na skutočnú IP klienta z dôveryhodnej forwarded-IP hlavičky. Express `trust proxy` (`TRUST_PROXY`, default `1`) potom korektne vystaví `req.ip`. Centrálny helper `backend/src/utils/clientIp.ts → getClientIp(req)` používa security log aj všetky rate-limity (`keyGenerator`). `IP_DEBUG=true` zapne diagnostický middleware logujúci všetky relevantné hlavičky. Pozri *docs/DEPLOYMENT.md → Client IP behind a reverse proxy*.
 - **Automatický cleanup** — expirované zdieľania sa mažú podľa cron rozvrhu
 
 ## Limit stiahnutí

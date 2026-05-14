@@ -51,6 +51,19 @@ export const config = {
 
   corsOrigin: process.env.CORS_ORIGIN || "*",
 
+  /**
+   * Express trust-proxy setting. Number = hops to trust; can also be a
+   * comma-separated list of IPs/CIDRs (Express parses both).
+   */
+  trustProxy: ((): number | string => {
+    const raw = (process.env.TRUST_PROXY || "1").trim();
+    const n = Number(raw);
+    return Number.isFinite(n) && /^\d+$/.test(raw) ? n : raw;
+  })(),
+
+  /** When true, log full IP-header snapshot for every /api/* request. Diagnostic only. */
+  ipDebug: process.env.IP_DEBUG === "true",
+
   diskWarnThresholdPercent: parseInt(process.env.DISK_WARN_THRESHOLD_PERCENT || "15", 10),
   diskBlockThresholdPercent: parseInt(process.env.DISK_BLOCK_THRESHOLD_PERCENT || "5", 10),
   adminNotifyDebounceMinutes: parseInt(process.env.ADMIN_NOTIFY_DEBOUNCE_MINUTES || "60", 10),

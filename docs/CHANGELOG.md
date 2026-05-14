@@ -1,5 +1,28 @@
 # FileDrop — Changelog
 
+## [Unreleased]
+
+### Added
+- **Reálne IP klientov za reverse proxy** — bundled nginx má cez env premenné `TRUSTED_PROXIES` a `REAL_IP_HEADER` zapínateľný `ngx_http_realip_module`. Pri starte kontajnera (`frontend/docker-entrypoint.sh`) sa do `nginx.conf` injektnú direktívy `set_real_ip_from`, `real_ip_header` a `real_ip_recursive on`, takže `$remote_addr` sa prepíše na skutočnú IP klienta z dôveryhodnej forwarded-IP hlavičky. Bez `TRUSTED_PROXIES` modul ostáva vypnutý — existujúce nasadenia bez externého proxy fungujú nezmenene.
+- **`GET /api/admin/debug/ip` endpoint** — vráti JSON snapshot relevantných hlavičiek (`x-forwarded-for`, `x-real-ip`, `cf-connecting-ip`, `true-client-ip`, ...) plus `socketRemoteAddress`, `req.ip`, `req.ips` a `trustProxy`. Slúži na zistenie, akou hlavičkou upstream proxy posiela klientovu IP.
+- **`IP_DEBUG=true` diagnostický middleware** — pri každom `/api/*` requeste vypíše do logu `[IP_DEBUG] {...}` snapshot. Po identifikácii správnej hlavičky vypnúť.
+- **`backend/src/utils/clientIp.ts`** — centrálny helper `getClientIp(req)` (normalizuje IPv6-mapped IPv4, fallback chain) + `debugIpSnapshot(req)`. Používa ho `securityLog.ts` aj všetky `keyGenerator`-y v `middleware/rateLimit.ts`, takže log a rate-limit vidia identický kľúč.
+- **`TRUST_PROXY` env premenná** — konfigurovateľná hodnota Express `trust proxy` setting (default `1`, prijíma číslo alebo CSV CIDR list).
+- **`adminWriteRateLimit`** — nový rate limiter (30 req / min, kľúčovaný per-admin) na 4 deštruktívne admin endpointy: `DELETE /api/admin/shares/:slug`, `PUT /api/admin/cron-jobs/:id`, `POST /api/admin/cron-jobs/:id/run`, `POST /api/admin/cleanup/run`. Slúži ako poistka proti hromadným zmazaniam / opakovaným manuálnym spusteniam.
+
+### Changed
+- **`adminRateLimit`: 60 → 300 req / min, IP → admin email z JWT.** Pôvodný `60/min` strop dokázal vyhodiť 429 aj pri bežnej navigácii v admin SPA (každý prechod medzi tabmi a zmena grafu vyvoláva 3-6 requestov; pri prepínaní metrík na dashboarde sa kumulujú). Nový limiter extrahuje email z Bearer JWT cez `jwt.decode` (bez verifikácie podpisu — `requireAdmin` overí token kryptograficky až v ďalšom kroku), takže každý admin má vlastný bucket bez ohľadu na zdrojovú IP. Pri requeste bez tokenu / malformed tokenom fallback na IP cez `getClientIp(req)`.
+
+### Fixed
+- **Rate-limit accumulation za reverse proxy** — IP-based limitery (`fileInit`, `shareCreate`, predtým `admin`) doteraz pri nasadení za externým proxy zdieľali jeden bucket pre všetkých klientov (lebo `req.ip` vracal IP proxy/docker bridge gateway, napr. `172.x`). Po novom s `TRUSTED_PROXIES` + `REAL_IP_HEADER` má každý klient vlastný bucket; admin limitery navyše key-ujú per admin email (viď *Changed*).
+- **Top IPs v admin konzole zobrazovali jednu IP pre všetkých** — `security_events.ip` po novom obsahuje skutočnú klientsku IP (ak ju upstream proxy preposiela).
+
+### Files changed
+- Backend: `src/utils/clientIp.ts` (nový), `src/config.ts`, `src/index.ts`, `src/services/securityLog.ts`, `src/middleware/rateLimit.ts`, `src/routes/admin.ts`
+- Frontend: `nginx/nginx-http.conf`, `nginx/nginx-ssl.conf`, `docker-entrypoint.sh`
+- Compose: `docker-compose.yml`, `docker-compose.prod.yml`, `.env.example`
+- Docs: `docs/DEPLOYMENT.md`, `docs/API.md`, `docs/ARCHITECTURE.md`, `README.md`
+
 ## [1.2.0] - 2026-04-08
 
 ### Added

@@ -14,12 +14,21 @@ import { checkDiskSpace } from "./services/diskMonitor";
 import { sendAdminNotification } from "./services/adminNotify";
 import { cronRegistry } from "./services/cronRegistry";
 import { adminRateLimit } from "./middleware/rateLimit";
+import { debugIpSnapshot } from "./utils/clientIp";
 
 const prisma = new PrismaClient();
 
 const app = express();
 
-app.set("trust proxy", 1);
+app.set("trust proxy", config.trustProxy);
+
+if (config.ipDebug) {
+  app.use("/api", (req, _res, next) => {
+    console.log("[IP_DEBUG]", JSON.stringify({ path: req.originalUrl, ...debugIpSnapshot(req) }));
+    next();
+  });
+}
+
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,

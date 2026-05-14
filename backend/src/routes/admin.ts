@@ -2,11 +2,13 @@ import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import { config } from "../config";
 import { requireAdmin, requireAdminWrite } from "../middleware/admin";
+import { adminWriteRateLimit } from "../middleware/rateLimit";
 import { isValidSlug, sanitizeString } from "../middleware/validate";
 import { deleteShareDir } from "../services/storage";
 import { cleanupExpiredShares } from "../services/cleanup";
 import { cronRegistry } from "../services/cronRegistry";
 import { getDiskInfo, getDirSizeBytes } from "../services/diskMonitor";
+import { debugIpSnapshot } from "../utils/clientIp";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -19,6 +21,13 @@ router.get("/me", requireAdmin, (req, res) => {
   res.json({
     email: req.user!.email,
     role: req.adminRole,
+  });
+});
+
+router.get("/debug/ip", requireAdmin, (req, res) => {
+  res.json({
+    trustProxy: config.trustProxy,
+    ...debugIpSnapshot(req),
   });
 });
 
@@ -276,7 +285,7 @@ router.get("/shares/:slug", requireAdmin, async (req, res) => {
   }
 });
 
-router.delete("/shares/:slug", requireAdminWrite, async (req, res) => {
+router.delete("/shares/:slug", adminWriteRateLimit, requireAdminWrite, async (req, res) => {
   try {
     const slug = param(req.params.slug);
     if (!isValidSlug(slug)) {
@@ -382,7 +391,7 @@ router.get("/cleanup-logs", requireAdmin, async (req, res) => {
   }
 });
 
-router.put("/cron-jobs/:id", requireAdminWrite, async (req, res) => {
+router.put("/cron-jobs/:id", adminWriteRateLimit, requireAdminWrite, async (req, res) => {
   try {
     const id = param(req.params.id);
     const { schedule, enabled } = req.body;
@@ -412,7 +421,7 @@ router.put("/cron-jobs/:id", requireAdminWrite, async (req, res) => {
   }
 });
 
-router.post("/cron-jobs/:id/run", requireAdminWrite, async (req, res) => {
+router.post("/cron-jobs/:id/run", adminWriteRateLimit, requireAdminWrite, async (req, res) => {
   try {
     const id = param(req.params.id);
     console.log(`[Admin] Manual run of "${id}" triggered by ${req.user!.email}`);
@@ -803,7 +812,7 @@ router.get("/security/events", requireAdmin, async (req, res) => {
   }
 });
 
-router.post("/cleanup/run", requireAdminWrite, async (req, res) => {
+router.post("/cleanup/run", adminWriteRateLimit, requireAdminWrite, async (req, res) => {
   try {
     console.log(`[Admin] Manual cleanup triggered by ${req.user!.email}`);
     await cleanupExpiredShares();

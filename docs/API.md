@@ -452,6 +452,32 @@ Manuálne spustí cleanup. Vyžaduje admin rolu.
 
 ---
 
+### GET /api/admin/debug/ip
+
+Diagnostický endpoint pre overenie ako sa rozpoznáva IP klienta za reverse proxy. Vráti JSON snapshot relevantných hlavičiek + výsledok `getClientIp(req)`. Užitočné pri ladení `TRUSTED_PROXIES` / `REAL_IP_HEADER` (pozri *DEPLOYMENT.md → Client IP behind a reverse proxy*).
+
+**Response 200:**
+```json
+{
+  "trustProxy": 1,
+  "resolvedIp": "203.0.113.5",
+  "expressIp": "203.0.113.5",
+  "expressIps": ["203.0.113.5"],
+  "socketRemoteAddress": "::ffff:172.18.0.4",
+  "headers": {
+    "x-forwarded-for": "203.0.113.5",
+    "x-real-ip": "203.0.113.5",
+    "x-original-forwarded-for": null,
+    "x-client-ip": null,
+    "true-client-ip": null,
+    "cf-connecting-ip": null,
+    "forwarded": null
+  }
+}
+```
+
+---
+
 ### GET /api/admin/security/status
 
 Vráti aktuálny stav bezpečnostných ochran. Vyžaduje admin rolu.
@@ -538,7 +564,7 @@ Kontrola stavu backendu vrátane DB konektivity a disku.
 
 ## Rate Limiting
 
-Všetky endpointy sú chránené rate limitmi. Odpoveď 429 obsahuje `RateLimit-*` hlavičky (RFC draft).
+Vybrané endpointy sú chránené rate limitmi. Odpoveď 429 obsahuje `RateLimit-*` hlavičky (RFC draft).
 
 | Endpoint | Limit | Kľúč |
 |----------|-------|------|
@@ -546,7 +572,12 @@ Všetky endpointy sú chránené rate limitmi. Odpoveď 429 obsahuje `RateLimit-
 | POST /api/auth/verify-otp | 10 req / 15 min | email alebo IP |
 | POST /api/shares | 20 req / min | IP |
 | POST /api/shares/:slug/files/init | 60 req / min | IP |
-| /api/admin/* | 60 req / min | IP |
+| /api/admin/* | 300 req / min | admin email (z JWT) alebo IP |
+| DELETE /api/admin/shares/:slug, PUT /api/admin/cron-jobs/:id, POST /api/admin/cron-jobs/:id/run, POST /api/admin/cleanup/run | 30 req / min | admin email (z JWT) alebo IP |
+
+Per-chunk upload/download endpointy nie sú rate-limitované (per-chunk strop by sa pri 50 GB súbore vyčerpal už pri jednom prenose) — chránené sú vyššie cez `fileInit`/`shareCreate` a `maxDownloads`/`maxFileSizeMb`. Klient sa identifikuje cez `getClientIp(req)` helper, ktorý čerpá z `req.ip` po aplikácii `trust proxy` + nginx `real_ip` module. Pri nasadení za reverse proxy nakonfigurujte `TRUSTED_PROXIES` a `REAL_IP_HEADER` v `.env`, inak všetci klienti zdieľajú jeden rate-limit bucket — pozri *DEPLOYMENT.md → Client IP behind a reverse proxy*.
+
+Admin limity sú per-admin (kľúčované cez email z JWT) — každý admin používateľ má vlastný bucket bez ohľadu na IP. *Write* endpointy (mazanie share-u, editácia cron jobov, manuálne spustenia) majú prísnejší 30/min strop ako poistku proti opakovaným deštruktívnym akciám. Pri requeste bez tokenu fallback na IP.
 
 ---
 

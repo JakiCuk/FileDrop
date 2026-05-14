@@ -1,5 +1,6 @@
 import { Request } from "express";
 import { PrismaClient } from "@prisma/client";
+import { getClientIp } from "../utils/clientIp";
 
 const prisma = new PrismaClient();
 
@@ -16,7 +17,7 @@ export function logSecurityEvent(
   req: Request,
   details?: Record<string, unknown>,
 ): void {
-  const ip = req.ip || req.socket.remoteAddress || "unknown";
+  const ip = getClientIp(req);
   const method = req.method;
   const path = req.originalUrl;
 

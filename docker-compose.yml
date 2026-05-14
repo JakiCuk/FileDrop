@@ -48,6 +48,8 @@ services:
       SMTP_OAUTH2_CLIENT_SECRET: ${SMTP_OAUTH2_CLIENT_SECRET:-}
       ADMIN_EMAILS: ${ADMIN_EMAILS:-}
       APP_NAME: ${APP_NAME:-FileDrop}
+      TRUST_PROXY: ${TRUST_PROXY:-1}
+      IP_DEBUG: ${IP_DEBUG:-false}
       NODE_ENV: production
       PORT: 3000
     volumes:
@@ -64,6 +66,8 @@ services:
       SSL_MODE: ${SSL_MODE:-external}
       VITE_COMPANY_NAME: ${VITE_COMPANY_NAME:-FileDrop}
       VITE_COMPANY_LOGO_URL: ${VITE_COMPANY_LOGO_URL:-}
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
+      REAL_IP_HEADER: ${REAL_IP_HEADER:-X-Forwarded-For}
     ports:
       - "${APP_PORT:-8080}:80"
 
