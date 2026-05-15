@@ -1,6 +1,6 @@
 # FileDrop — Changelog
 
-## [Unreleased]
+## [1.3.0] - 2026-05-15
 
 ### Added
 - **Reálne IP klientov za reverse proxy** — bundled nginx má cez env premenné `TRUSTED_PROXIES` a `REAL_IP_HEADER` zapínateľný `ngx_http_realip_module`. Pri starte kontajnera (`frontend/docker-entrypoint.sh`) sa do `nginx.conf` injektnú direktívy `set_real_ip_from`, `real_ip_header` a `real_ip_recursive on`, takže `$remote_addr` sa prepíše na skutočnú IP klienta z dôveryhodnej forwarded-IP hlavičky. Bez `TRUSTED_PROXIES` modul ostáva vypnutý — existujúce nasadenia bez externého proxy fungujú nezmenene.
