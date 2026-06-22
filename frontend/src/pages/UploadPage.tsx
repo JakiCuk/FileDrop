@@ -5,6 +5,7 @@ import {
   generateEncryptionKey,
   exportKeyToBase64,
 } from "../services/crypto";
+import { saveShareKey } from "../services/keyVault";
 import {
   uploadFileEncrypted,
   type UploadProgress,
@@ -96,6 +97,9 @@ export default function UploadPage() {
       }
 
       const url = `${window.location.origin}/s/${slug}#${keyBase64}`;
+      // Persist the key locally so the owner can recover this link later from
+      // "My shares" on this device, even if they don't copy it now.
+      saveShareKey(slug, keyBase64);
       setShareUrl(url);
       setStage("done");
     } catch (err) {

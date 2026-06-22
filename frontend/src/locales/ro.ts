@@ -78,6 +78,9 @@ export default {
     bidirectionalTag: "bidirecțional",
     emailSent: "Linkul de descărcare a fost trimis pe e-mailul dvs.",
     downloads: "Descărcări",
+    copyLink: "Copiază linkul",
+    linkCopied: "Copiat",
+    linkUnavailableHint: "Linkul este disponibil doar pe dispozitivul de pe care ați încărcat",
     delete: "Șterge",
   },
   layout: {

@@ -78,6 +78,9 @@ export default {
     bidirectionalTag: "kétirányú",
     emailSent: "A letöltési link elküldésre került az e-mail címére.",
     downloads: "Letöltések",
+    copyLink: "Hivatkozás másolása",
+    linkCopied: "Másolva",
+    linkUnavailableHint: "A hivatkozás csak azon az eszközön érhető el, amelyről feltöltötte",
     delete: "Törlés",
   },
   layout: {

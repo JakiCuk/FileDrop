@@ -5,6 +5,7 @@ Webová aplikácia pre dočasné zdieľanie súborov s end-to-end šifrovaním. 
 ## Kľúčové vlastnosti
 
 - **E2E šifrovanie** — AES-256-GCM, šifrovací kľúč nikdy neopustí prehliadač (URL fragment)
+- **Obnova odkazu** — uploader si môže odkaz so šifrovacím kľúčom znovu skopírovať z „Moje zdieľania" na tom istom zariadení; kľúč sa ukladá len lokálne v prehliadači (`localStorage`), nikdy nie na server
 - **OTP autentifikácia** — prihlásenie cez jednorazový kód zaslaný na e-mail (e-maily v EN, CS, SK, UK)
 - **Whitelist e-mailových domén** — prístup len pre povolené organizácie
 - **Obojsmerné zdieľanie** — príjemca môže nahrávať súbory späť (reply share s novým kľúčom)

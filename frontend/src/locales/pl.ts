@@ -78,6 +78,9 @@ export default {
     bidirectionalTag: "dwukierunkowe",
     emailSent: "Link do pobrania został wysłany na Twój e-mail.",
     downloads: "Pobrania",
+    copyLink: "Kopiuj link",
+    linkCopied: "Skopiowano",
+    linkUnavailableHint: "Link dostępny tylko na urządzeniu, z którego przesłano pliki",
     delete: "Usuń",
   },
   layout: {

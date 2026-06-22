@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { api, ApiError } from "../services/api";
+import { getShareKey, removeShareKey, buildShareUrl } from "../services/keyVault";
 
 interface ShareSummary {
   id: string;
@@ -19,6 +20,7 @@ export default function MySharesPage() {
   const [shares, setShares] = useState<ShareSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
 
   useEffect(() => {
     loadShares();
@@ -40,9 +42,22 @@ export default function MySharesPage() {
     if (!confirm(t("myShares.confirmDelete"))) return;
     try {
       await api.del(`/api/shares/${slug}`);
+      removeShareKey(slug);
       setShares((prev) => prev.filter((s) => s.slug !== slug));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("myShares.deleteFailed"));
+    }
+  }
+
+  async function handleCopyLink(slug: string) {
+    const key = getShareKey(slug);
+    if (!key) return;
+    try {
+      await navigator.clipboard.writeText(buildShareUrl(slug, key));
+      setCopiedSlug(slug);
+      setTimeout(() => setCopiedSlug((s) => (s === slug ? null : s)), 2000);
+    } catch {
+      // clipboard unavailable — ignore
     }
   }
 
@@ -70,7 +85,9 @@ export default function MySharesPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {shares.map((share) => (
+          {shares.map((share) => {
+            const shareKey = getShareKey(share.slug);
+            return (
             <div
               key={share.id}
               className="bg-white border border-gray-200 rounded-xl p-5 flex items-center justify-between"
@@ -114,9 +131,24 @@ export default function MySharesPage() {
                     {t("myShares.emailSent")}
                   </p>
                 )}
+                {!shareKey && !share.parentShareId && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    {t("myShares.linkUnavailableHint")}
+                  </p>
+                )}
               </div>
 
               <div className="flex gap-2 flex-shrink-0 ml-4">
+                {shareKey && (
+                  <button
+                    onClick={() => handleCopyLink(share.slug)}
+                    className="text-sm text-brand-600 hover:text-brand-800 font-medium transition"
+                  >
+                    {copiedSlug === share.slug
+                      ? t("myShares.linkCopied")
+                      : t("myShares.copyLink")}
+                  </button>
+                )}
                 <button
                   onClick={() => handleDelete(share.slug)}
                   className="text-sm text-red-500 hover:text-red-700 font-medium transition"
@@ -125,7 +157,8 @@ export default function MySharesPage() {
                 </button>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

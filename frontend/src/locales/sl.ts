@@ -78,6 +78,9 @@ export default {
     bidirectionalTag: "dvosmerno",
     emailSent: "Povezava za prenos je bila poslana na vaš e-poštni naslov.",
     downloads: "Prenosi",
+    copyLink: "Kopiraj povezavo",
+    linkCopied: "Kopirano",
+    linkUnavailableHint: "Povezava je na voljo samo v napravi, iz katere ste naložili",
     delete: "Izbriši",
   },
   layout: {

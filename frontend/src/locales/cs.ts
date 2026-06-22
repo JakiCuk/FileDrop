@@ -78,6 +78,9 @@ export default {
     bidirectionalTag: "obousměrné",
     emailSent: "Odkaz ke stažení byl odeslán na váš e-mail.",
     downloads: "Stažení",
+    copyLink: "Kopírovat odkaz",
+    linkCopied: "Zkopírováno",
+    linkUnavailableHint: "Odkaz je dostupný jen na zařízení, ze kterého jste nahrávali",
     delete: "Smazat",
   },
   layout: {
@@ -85,7 +88,7 @@ export default {
     logout: "Odhlásit se",
     login: "Přihlásit se",
     footer: "Dočasné sdílení souborů s E2E šifrováním",
-    footerCredit: "Kompletně napsán AI • Vypromptováno Romanem Jakončukem",
+    footerCredit: "Kompletně napsán AI • Vypromptováno člověkem",
   },
   dropzone: {
     dragOrClick: "Přetáhněte soubory sem nebo klikněte pro výběr",

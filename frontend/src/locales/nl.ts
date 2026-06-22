@@ -78,6 +78,9 @@ export default {
     bidirectionalTag: "bidirectioneel",
     emailSent: "De downloadlink is naar je e-mail verzonden.",
     downloads: "Downloads",
+    copyLink: "Link kopiëren",
+    linkCopied: "Gekopieerd",
+    linkUnavailableHint: "Link alleen beschikbaar op het apparaat waarvan je hebt geüpload",
     delete: "Verwijderen",
   },
   layout: {

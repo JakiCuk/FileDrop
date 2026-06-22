@@ -78,6 +78,9 @@ export default {
     bidirectionalTag: "çift yönlü",
     emailSent: "İndirme bağlantısı e-postanıza gönderildi.",
     downloads: "İndirmeler",
+    copyLink: "Bağlantıyı kopyala",
+    linkCopied: "Kopyalandı",
+    linkUnavailableHint: "Bağlantı yalnızca yükleme yaptığınız cihazda kullanılabilir",
     delete: "Sil",
   },
   layout: {

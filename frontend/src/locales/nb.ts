@@ -78,6 +78,9 @@ export default {
     bidirectionalTag: "toveis",
     emailSent: "Nedlastingslenken er sendt til e-posten din.",
     downloads: "Nedlastinger",
+    copyLink: "Kopier lenke",
+    linkCopied: "Kopiert",
+    linkUnavailableHint: "Lenken er bare tilgjengelig på enheten du lastet opp fra",
     delete: "Slett",
   },
   layout: {

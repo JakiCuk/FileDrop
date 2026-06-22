@@ -78,6 +78,9 @@ export default {
     bidirectionalTag: "αμφίδρομη",
     emailSent: "Ο σύνδεσμος λήψης στάλθηκε στο e-mail σας.",
     downloads: "Λήψεις",
+    copyLink: "Αντιγραφή συνδέσμου",
+    linkCopied: "Αντιγράφηκε",
+    linkUnavailableHint: "Ο σύνδεσμος είναι διαθέσιμος μόνο στη συσκευή από την οποία κάνατε τη μεταφόρτωση",
     delete: "Διαγραφή",
   },
   layout: {

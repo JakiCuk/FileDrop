@@ -78,6 +78,9 @@ export default {
     bidirectionalTag: "bidirectional",
     emailSent: "The download link was sent to your e-mail.",
     downloads: "Downloads",
+    copyLink: "Copy link",
+    linkCopied: "Copied",
+    linkUnavailableHint: "Link available only on the device you uploaded from",
     delete: "Delete",
   },
   layout: {
@@ -85,7 +88,7 @@ export default {
     logout: "Sign out",
     login: "Sign in",
     footer: "Temporary file sharing with E2E encryption",
-    footerCredit: "Completely written by AI • Prompted by Roman Jakončuk",
+    footerCredit: "Completely written by AI • Prompted by a human",
   },
   dropzone: {
     dragOrClick: "Drag files here or click to select",

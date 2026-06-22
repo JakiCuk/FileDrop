@@ -68,6 +68,14 @@ Frontend kontajner obsahuje custom entrypoint, ktorý pri štarte:
 8. Príjemca otvorí URL, prehliadač extrahuje kľúč z fragmentu
 9. Metadata a chunky sa dešifrujú na strane klienta
 
+### Lokálna obnova odkazu (key vault)
+
+Keďže kľúč žije len v URL fragmente, používateľ, ktorý si odkaz hneď po uploade neskopíruje, ho stratí (v „Moje zdieľania" vidí len `slug`). Preto sa kľúč po uploade ukladá **lokálne v prehliadači** uploadera — `localStorage["sharedrop_share_keys"]` vo formáte `{ [slug]: { key, createdAt } }` (modul `frontend/src/services/keyVault.ts`). Stránka „Moje zdieľania" potom pri zhode `slug` zrekonštruuje plný odkaz a ponúkne tlačidlo *Kopírovať odkaz*.
+
+- **Zero-knowledge ostáva nedotknuté** — kľúč sa naďalej nikdy neposiela na server; pri kompromitácii servera je nedostupný.
+- **Vedome neukladáme do cookie** — cookie by sa pri každom requeste automaticky posielalo na server (hlavička `Cookie`), čím by kľúč unikol na server. `localStorage` sa na server nikdy automaticky neposiela.
+- **Kompromisy:** obnova funguje len v tom istom prehliadači/zariadení; kľúč je uložený v plaintexte (bez hesla), takže prístup k profilu prehliadača alebo XSS ho odhalí — rovnaký rizikový model ako už existujúci JWT v `localStorage`.
+
 ### Chunked Upload/Download
 
 Pre podporu veľkých súborov (až 50 GB) sa používa chunked prístup:
@@ -164,6 +172,7 @@ Kompletný návod: [DEPLOYMENT.md](DEPLOYMENT.md)
 - Server nikdy nevidí obsah súborov — šifrovací kľúč je len v URL fragmente (#)
 - AES-256-GCM s unikátnym IV pre každý chunk
 - Názvy súborov sú tiež šifrované
+- Kľúč sa pre obnovu odkazu ukladá len lokálne v prehliadači uploadera (`localStorage`, nie cookie, nie server) — viď *E2E Šifrovanie → Lokálna obnova odkazu*
 
 ### Autentifikácia a autorizácia
 - **OTP** — jednorazový 6-miestny kód s expiráciou (10 min default)

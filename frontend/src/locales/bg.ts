@@ -78,6 +78,9 @@ export default {
     bidirectionalTag: "двупосочно",
     emailSent: "Линкът за изтегляне е изпратен на вашия имейл.",
     downloads: "Изтегляния",
+    copyLink: "Копирай връзката",
+    linkCopied: "Копирано",
+    linkUnavailableHint: "Връзката е достъпна само на устройството, от което сте качили",
     delete: "Изтриване",
   },
   layout: {

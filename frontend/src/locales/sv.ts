@@ -78,6 +78,9 @@ export default {
     bidirectionalTag: "dubbelriktad",
     emailSent: "Nedladdningslänken har skickats till din e-post.",
     downloads: "Nedladdningar",
+    copyLink: "Kopiera länk",
+    linkCopied: "Kopierad",
+    linkUnavailableHint: "Länken är endast tillgänglig på enheten du laddade upp från",
     delete: "Ta bort",
   },
   layout: {

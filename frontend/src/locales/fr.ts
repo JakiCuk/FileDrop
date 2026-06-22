@@ -78,6 +78,9 @@ export default {
     bidirectionalTag: "bidirectionnel",
     emailSent: "Le lien de téléchargement a été envoyé à votre e-mail.",
     downloads: "Téléchargements",
+    copyLink: "Copier le lien",
+    linkCopied: "Copié",
+    linkUnavailableHint: "Lien disponible uniquement sur l'appareil depuis lequel vous avez envoyé les fichiers",
     delete: "Supprimer",
   },
   layout: {

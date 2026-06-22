@@ -78,6 +78,9 @@ export default {
     bidirectionalTag: "tovejs",
     emailSent: "Downloadlinket er sendt til din e-mail.",
     downloads: "Downloads",
+    copyLink: "Kopiér link",
+    linkCopied: "Kopieret",
+    linkUnavailableHint: "Linket er kun tilgængeligt på den enhed, du uploadede fra",
     delete: "Slet",
   },
   layout: {

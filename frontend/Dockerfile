@@ -26,7 +26,9 @@ COPY --from=admin-builder    /app/dist /usr/share/nginx/html/admin
 COPY frontend/nginx/nginx-http.conf /etc/nginx/conf.d/nginx-http.conf
 COPY frontend/nginx/nginx-ssl.conf  /etc/nginx/conf.d/nginx-ssl.conf
 COPY frontend/docker-entrypoint.sh /docker-entrypoint-filedrop.sh
-RUN chmod +x /docker-entrypoint-filedrop.sh
+# Strip CR (CRLF→LF) so the script runs even when the image is built on Windows,
+# then make it executable. A CRLF shebang breaks exec with "no such file or directory".
+RUN sed -i 's/\r$//' /docker-entrypoint-filedrop.sh && chmod +x /docker-entrypoint-filedrop.sh
 
 EXPOSE 80 443
 ENTRYPOINT ["/docker-entrypoint-filedrop.sh"]

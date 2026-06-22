@@ -78,6 +78,9 @@ export default {
     bidirectionalTag: "kaksisuuntainen",
     emailSent: "Latauslinkki on lähetetty sähköpostiisi.",
     downloads: "Lataukset",
+    copyLink: "Kopioi linkki",
+    linkCopied: "Kopioitu",
+    linkUnavailableHint: "Linkki on käytettävissä vain laitteella, jolta latasit tiedostot",
     delete: "Poista",
   },
   layout: {

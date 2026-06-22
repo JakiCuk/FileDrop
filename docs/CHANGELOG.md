@@ -1,5 +1,25 @@
 # FileDrop — Changelog
 
+## [1.4.0] - 2026-06-22
+
+### Added
+- **Lokálna obnova zdieľacieho odkazu** — šifrovací kľúč zdieľania (AES-256-GCM) žil doteraz výhradne v URL fragmente (`/s/{slug}#kľúč`); ak si používateľ odkaz hneď po uploade neskopíroval, kľúč nenávratne stratil a v „Moje zdieľania" videl len `slug` bez možnosti odkaz obnoviť. Po novom sa kľúč po dokončení uploadu ukladá **lokálne v prehliadači uploadera** (`localStorage["sharedrop_share_keys"]`, formát `{ [slug]: { key, createdAt } }`) cez nový modul `frontend/src/services/keyVault.ts`. Stránka „Moje zdieľania" pri zhode `slug` zrekonštruuje plný odkaz a zobrazí tlačidlo **Kopírovať odkaz**; pri mazaní zdieľania sa kľúč z vaultu odstráni (`removeShareKey`).
+  - **Zero-knowledge ostáva zachované** — kľúč sa naďalej nikdy neodosiela na server; pri kompromitácii servera je nedostupný. Vedome sa nepoužíva cookie (tá by sa posielala na server v hlavičke `Cookie`), ale `localStorage`, ktorý sa na server automaticky neposiela.
+  - **Obmedzenia (vedomý kompromis):** obnova funguje len v tom istom prehliadači/zariadení a kľúč je v `localStorage` v plaintexte (bez hesla) — rovnaký rizikový model ako už existujúci JWT v `localStorage`.
+- **Lokalizácia** — nové i18n kľúče `myShares.copyLink`, `myShares.linkCopied`, `myShares.linkUnavailableHint` pridané do **všetkých 22 jazykov** (EN + SK ručne, zvyšok cez `scripts/patch_locales_recover.mjs`).
+
+### Changed
+- **Footer kredit** — odstránené osobné meno z `layout.footerCredit`; všetky jazyky teraz zobrazujú generické „Vypromptované človekom" / „Prompted by a human" (EN/CS/SK lokalizované, ostatné dedia EN).
+
+### Fixed
+- **Pád frontend kontajnera pri builde na Windowse** — `frontend/docker-entrypoint.sh` mal pri checkoute na Windowse (`core.autocrlf`) CRLF zakončenia; shebang `#!/bin/sh\r` spôsoboval `exec ...: no such file or directory`. Pridaný `.gitattributes` (`*.sh text eol=lf`) a v `frontend/Dockerfile` `sed -i 's/\r$//'` pred `chmod`, takže image funguje nech sa builduje kdekoľvek.
+
+### Files changed
+- Frontend: `src/services/keyVault.ts` (nový), `src/pages/UploadPage.tsx`, `src/pages/MySharesPage.tsx`, `src/locales/*.ts` (22 jazykov vrátane footer kreditu), `Dockerfile`, `docker-entrypoint.sh`
+- Repo: `.gitattributes` (nový), `.gitignore`
+- Docs: `docs/ARCHITECTURE.md`, `README.md`, `docs/CHANGELOG.md`
+- Scripts: `scripts/patch_locales_recover.mjs` (nový, neverziovaný)
+
 ## [1.3.0] - 2026-05-15
 
 ### Added

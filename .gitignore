@@ -29,3 +29,6 @@ certs/
 
 # Git backup
 .git-backup/
+
+# Local-only Docker Compose override (test config — OTP to logs, open whitelist)
+docker-compose.override.yml
