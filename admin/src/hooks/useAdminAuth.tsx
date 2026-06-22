@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { api } from "../services/api";
+import { getTokenExpiryMs } from "../utils/jwt";
 
 interface AdminUser {
   id: string;
@@ -23,6 +24,8 @@ const AuthContext = createContext<AdminAuthState>({
 });
 
 const STORAGE_KEY = "sharedrop_admin_auth";
+/** Flag read by the login screen to show a "session expired" notice. */
+export const SESSION_EXPIRED_KEY = "sharedrop_admin_session_expired";
 
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
@@ -35,7 +38,11 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed.token && parsed.user && parsed.role) {
+        // Don't trust an already-expired token from a previous session.
+        const expMs = parsed.token ? getTokenExpiryMs(parsed.token) : null;
+        if (expMs !== null && expMs <= Date.now()) {
+          localStorage.removeItem(STORAGE_KEY);
+        } else if (parsed.token && parsed.user && parsed.role) {
           setToken(parsed.token);
           setUser(parsed.user);
           setRole(parsed.role);
@@ -56,13 +63,40 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ token: t, user: u, role: r }));
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setToken(null);
     setUser(null);
     setRole(null);
     api.setToken(null);
     localStorage.removeItem(STORAGE_KEY);
-  };
+  }, []);
+
+  // Expiry-driven logout: flag the session as expired (so the login screen can
+  // explain why), then clear auth. Manual logout does NOT set this flag.
+  const handleExpiry = useCallback(() => {
+    sessionStorage.setItem(SESSION_EXPIRED_KEY, "1");
+    logout();
+  }, [logout]);
+
+  // Reactive: a 401 on an authenticated request means the token is expired.
+  useEffect(() => {
+    api.setUnauthorizedHandler(handleExpiry);
+    return () => api.setUnauthorizedHandler(null);
+  }, [handleExpiry]);
+
+  // Proactive: log out exactly when the token expires, even if the user is idle.
+  useEffect(() => {
+    if (!token) return;
+    const expMs = getTokenExpiryMs(token);
+    if (expMs === null) return; // unparseable — rely on the reactive 401 path
+    const delay = expMs - Date.now();
+    if (delay <= 0) {
+      handleExpiry();
+      return;
+    }
+    const id = setTimeout(handleExpiry, delay);
+    return () => clearTimeout(id);
+  }, [token, handleExpiry]);
 
   if (!ready) return null;
 

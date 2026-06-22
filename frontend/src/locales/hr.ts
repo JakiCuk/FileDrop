@@ -20,6 +20,7 @@ export default {
     changeEmail: "← Promijeni e-mail",
     invalidCode: "Nevažeći ili istekli kod",
     sendFailed: "Slanje koda nije uspjelo",
+    sessionExpired: "Vaša sesija je istekla. Prijavite se ponovno.",
   },
   upload: {
     title: "Učitaj datoteke",

@@ -20,6 +20,7 @@ export default {
     changeEmail: "← E-postayı değiştir",
     invalidCode: "Geçersiz veya süresi dolmuş kod",
     sendFailed: "Kod gönderilemedi",
+    sessionExpired: "Oturumunuzun süresi doldu. Lütfen tekrar giriş yapın.",
   },
   upload: {
     title: "Dosya yükle",

@@ -20,6 +20,7 @@ export default {
     changeEmail: "← Αλλαγή e-mail",
     invalidCode: "Μη έγκυρος ή ληγμένος κωδικός",
     sendFailed: "Αποτυχία αποστολής του κωδικού",
+    sessionExpired: "Η συνεδρία σας έληξε. Συνδεθείτε ξανά.",
   },
   upload: {
     title: "Μεταφόρτωση αρχείων",

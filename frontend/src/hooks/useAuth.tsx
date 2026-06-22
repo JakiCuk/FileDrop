@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { api } from "../services/api";
+import { getTokenExpiryMs } from "../utils/jwt";
 
 interface User {
   id: string;
@@ -23,6 +24,8 @@ interface AuthState {
 const AuthContext = createContext<AuthState | null>(null);
 
 const STORAGE_KEY = "sharedrop_auth";
+/** Flag read by the login screen to show a "session expired" notice. */
+export const SESSION_EXPIRED_KEY = "sharedrop_session_expired";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(() => {
@@ -30,6 +33,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
+        // Don't trust an already-expired token from a previous session.
+        const expMs = getTokenExpiryMs(parsed.token);
+        if (expMs !== null && expMs <= Date.now()) {
+          localStorage.removeItem(STORAGE_KEY);
+          return null;
+        }
         api.setToken(parsed.token);
         return parsed.token;
       }
@@ -62,9 +71,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
+  // Expiry-driven logout: mark the session as expired (so the login screen can
+  // explain why), then clear auth. Manual logout does NOT set this flag.
+  const handleExpiry = useCallback(() => {
+    sessionStorage.setItem(SESSION_EXPIRED_KEY, "1");
+    logout();
+  }, [logout]);
+
   useEffect(() => {
     if (token) api.setToken(token);
   }, [token]);
+
+  // Reactive: a 401 on an authenticated request means the token is expired.
+  useEffect(() => {
+    api.setUnauthorizedHandler(handleExpiry);
+    return () => api.setUnauthorizedHandler(null);
+  }, [handleExpiry]);
+
+  // Proactive: log out exactly when the token expires, even if the user is idle.
+  useEffect(() => {
+    if (!token) return;
+    const expMs = getTokenExpiryMs(token);
+    if (expMs === null) return; // unparseable — rely on the reactive 401 path
+    const delay = expMs - Date.now();
+    if (delay <= 0) {
+      handleExpiry();
+      return;
+    }
+    const id = setTimeout(handleExpiry, delay);
+    return () => clearTimeout(id);
+  }, [token, handleExpiry]);
 
   return (
     <AuthContext.Provider value={{ token, user, login, logout }}>

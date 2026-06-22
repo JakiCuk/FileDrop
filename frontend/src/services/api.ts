@@ -9,9 +9,15 @@ export class ApiError extends Error {
 
 class ApiClient {
   private token: string | null = null;
+  private onUnauthorized: (() => void) | null = null;
 
   setToken(token: string | null) {
     this.token = token;
+  }
+
+  /** Register a callback fired when an authenticated request returns 401. */
+  setUnauthorizedHandler(handler: (() => void) | null) {
+    this.onUnauthorized = handler;
   }
 
   private authHeaders(): Record<string, string> {
@@ -21,12 +27,23 @@ class ApiClient {
     return {};
   }
 
+  /**
+   * Turn a non-ok response into an ApiError. When an authenticated request
+   * (token present) is rejected with 401, the token is expired/invalid — fire
+   * the unauthorized handler so the app can log the user out. The token guard
+   * avoids spurious logouts during login (verify-otp 401) and on public pages.
+   */
+  private async handleError(res: Response): Promise<never> {
+    if (res.status === 401 && this.token) {
+      this.onUnauthorized?.();
+    }
+    const body = await res.json().catch(() => ({ error: res.statusText }));
+    throw new ApiError(res.status, body.error || res.statusText);
+  }
+
   async get<T = unknown>(path: string): Promise<T> {
     const res = await fetch(path, { headers: this.authHeaders() });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({ error: res.statusText }));
-      throw new ApiError(res.status, body.error || res.statusText);
-    }
+    if (!res.ok) return this.handleError(res);
     return res.json();
   }
 
@@ -37,10 +54,7 @@ class ApiClient {
       body: JSON.stringify(body),
       signal,
     });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({ error: res.statusText }));
-      throw new ApiError(res.status, data.error || res.statusText);
-    }
+    if (!res.ok) return this.handleError(res);
     return res.json();
   }
 
@@ -49,10 +63,7 @@ class ApiClient {
       method: "DELETE",
       headers: this.authHeaders(),
     });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({ error: res.statusText }));
-      throw new ApiError(res.status, data.error || res.statusText);
-    }
+    if (!res.ok) return this.handleError(res);
     return res.json();
   }
 
@@ -72,10 +83,7 @@ class ApiClient {
       body: data,
       signal,
     });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({ error: res.statusText }));
-      throw new ApiError(res.status, body.error || res.statusText);
-    }
+    if (!res.ok) return this.handleError(res);
     return res.json();
   }
 
@@ -84,10 +92,7 @@ class ApiClient {
     signal?: AbortSignal,
   ): Promise<{ data: ArrayBuffer; iv: string }> {
     const res = await fetch(path, { headers: this.authHeaders(), signal });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({ error: res.statusText }));
-      throw new ApiError(res.status, body.error || res.statusText);
-    }
+    if (!res.ok) return this.handleError(res);
     const iv = res.headers.get("X-Chunk-IV") || "";
     const data = await res.arrayBuffer();
     return { data, iv };

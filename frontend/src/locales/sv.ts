@@ -20,6 +20,7 @@ export default {
     changeEmail: "← Ändra e-post",
     invalidCode: "Ogiltig eller utgången kod",
     sendFailed: "Det gick inte att skicka koden",
+    sessionExpired: "Din session har gått ut. Logga in igen.",
   },
   upload: {
     title: "Ladda upp filer",

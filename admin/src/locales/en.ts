@@ -28,6 +28,7 @@ export default {
     notAdmin: "This email does not have admin access.",
     otpSent: "OTP code sent! Check your email.",
     invalidOtp: "Invalid or expired OTP code.",
+    sessionExpired: "Your session has expired. Please sign in again.",
     error: "An error occurred. Please try again.",
   },
   dashboard: {

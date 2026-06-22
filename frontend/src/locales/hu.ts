@@ -20,6 +20,7 @@ export default {
     changeEmail: "← E-mail módosítása",
     invalidCode: "Érvénytelen vagy lejárt kód",
     sendFailed: "A kód küldése sikertelen",
+    sessionExpired: "A munkamenet lejárt. Kérjük, jelentkezzen be újra.",
   },
   upload: {
     title: "Fájlok feltöltése",

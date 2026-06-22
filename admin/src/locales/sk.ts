@@ -28,6 +28,7 @@ export default {
     notAdmin: "Tento email nemá administrátorský prístup.",
     otpSent: "OTP kód odoslaný! Skontrolujte email.",
     invalidOtp: "Neplatný alebo vypršaný OTP kód.",
+    sessionExpired: "Vaša relácia vypršala. Prihláste sa znova.",
     error: "Nastala chyba. Skúste to prosím znova.",
   },
   dashboard: {

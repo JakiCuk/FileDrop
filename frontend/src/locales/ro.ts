@@ -20,6 +20,7 @@ export default {
     changeEmail: "← Schimbă e-mailul",
     invalidCode: "Cod invalid sau expirat",
     sendFailed: "Trimiterea codului a eșuat",
+    sessionExpired: "Sesiunea ta a expirat. Te rugăm să te autentifici din nou.",
   },
   upload: {
     title: "Încarcă fișiere",

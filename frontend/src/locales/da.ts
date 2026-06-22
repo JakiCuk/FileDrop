@@ -20,6 +20,7 @@ export default {
     changeEmail: "← Skift e-mail",
     invalidCode: "Ugyldig eller udløbet kode",
     sendFailed: "Kunne ikke sende koden",
+    sessionExpired: "Din session er udløbet. Log ind igen.",
   },
   upload: {
     title: "Upload filer",

@@ -20,6 +20,7 @@ export default {
     changeEmail: "← Changer d'e-mail",
     invalidCode: "Code invalide ou expiré",
     sendFailed: "Échec de l'envoi du code",
+    sessionExpired: "Votre session a expiré. Veuillez vous reconnecter.",
   },
   upload: {
     title: "Téléverser des fichiers",

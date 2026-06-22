@@ -20,6 +20,7 @@ export default {
     changeEmail: "← E-mailadres wijzigen",
     invalidCode: "Ongeldige of verlopen code",
     sendFailed: "Verzenden van de code mislukt",
+    sessionExpired: "Uw sessie is verlopen. Log opnieuw in.",
   },
   upload: {
     title: "Bestanden uploaden",

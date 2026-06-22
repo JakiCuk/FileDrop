@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useAdminAuth } from "../hooks/useAdminAuth";
+import { useAdminAuth, SESSION_EXPIRED_KEY } from "../hooks/useAdminAuth";
 import { api, ApiError } from "../services/api";
 import OtpInput from "../components/OtpInput";
 
@@ -14,6 +14,14 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  useEffect(() => {
+    if (sessionStorage.getItem(SESSION_EXPIRED_KEY)) {
+      sessionStorage.removeItem(SESSION_EXPIRED_KEY);
+      setSessionExpired(true);
+    }
+  }, []);
 
   if (token) {
     navigate("/", { replace: true });
@@ -82,6 +90,11 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-admin-800 rounded-2xl p-8 border border-admin-700 shadow-xl">
+          {sessionExpired && !error && (
+            <div className="mb-4 p-3 bg-amber-900/50 border border-amber-700 rounded-lg text-amber-300 text-sm">
+              {t("login.sessionExpired")}
+            </div>
+          )}
           {error && (
             <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-300 text-sm">
               {error}

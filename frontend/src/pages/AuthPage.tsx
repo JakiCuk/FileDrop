@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth, SESSION_EXPIRED_KEY } from "../hooks/useAuth";
 import { api, ApiError } from "../services/api";
 import OtpInput from "../components/OtpInput";
 
@@ -24,6 +24,14 @@ export default function AuthPage() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  useEffect(() => {
+    if (sessionStorage.getItem(SESSION_EXPIRED_KEY)) {
+      sessionStorage.removeItem(SESSION_EXPIRED_KEY);
+      setSessionExpired(true);
+    }
+  }, []);
 
   if (token) {
     navigate("/upload", { replace: true });
@@ -74,6 +82,12 @@ export default function AuthPage() {
         <h2 className="text-2xl font-bold text-gray-900 text-center mb-6">
           {step === "email" ? t("auth.loginTitle") : t("auth.otpTitle")}
         </h2>
+
+        {sessionExpired && (
+          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 px-3 py-2 rounded-lg mb-4 text-center">
+            {t("auth.sessionExpired")}
+          </p>
+        )}
 
         {step === "email" ? (
           <form onSubmit={handleRequestOtp} className="space-y-4">

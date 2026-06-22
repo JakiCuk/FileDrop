@@ -20,6 +20,7 @@ export default {
     changeEmail: "← Změnit e-mail",
     invalidCode: "Neplatný nebo expirovaný kód",
     sendFailed: "Odeslání kódu se nezdařilo",
+    sessionExpired: "Vaše relace vypršela. Přihlaste se prosím znovu.",
   },
   upload: {
     title: "Nahrát soubory",

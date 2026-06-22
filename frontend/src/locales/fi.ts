@@ -20,6 +20,7 @@ export default {
     changeEmail: "← Vaihda sähköposti",
     invalidCode: "Virheellinen tai vanhentunut koodi",
     sendFailed: "Koodin lähettäminen epäonnistui",
+    sessionExpired: "Istuntosi on vanhentunut. Kirjaudu uudelleen sisään.",
   },
   upload: {
     title: "Lataa tiedostoja",

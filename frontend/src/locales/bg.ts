@@ -20,6 +20,7 @@ export default {
     changeEmail: "← Промяна на имейл",
     invalidCode: "Невалиден или изтекъл код",
     sendFailed: "Неуспешно изпращане на кода",
+    sessionExpired: "Сесията ви изтече. Моля, влезте отново.",
   },
   upload: {
     title: "Качване на файлове",

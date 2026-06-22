@@ -20,6 +20,7 @@ export default {
     changeEmail: "← Change e-mail",
     invalidCode: "Invalid or expired code",
     sendFailed: "Failed to send the code",
+    sessionExpired: "Your session has expired. Please sign in again.",
   },
   upload: {
     title: "Upload files",

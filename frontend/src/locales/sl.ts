@@ -20,6 +20,7 @@ export default {
     changeEmail: "← Spremeni e-pošto",
     invalidCode: "Neveljavna ali potekla koda",
     sendFailed: "Pošiljanje kode ni uspelo",
+    sessionExpired: "Vaša seja je potekla. Prijavite se znova.",
   },
   upload: {
     title: "Naloži datoteke",
