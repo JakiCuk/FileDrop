@@ -1,5 +1,24 @@
 # FileDrop — Changelog
 
+## [1.4.2] - 2026-06-29
+
+### Fixed
+- **Admin dashboard — graf „Vytvořená sdílení" na časovej osi nezobrazoval žiadne dáta.** Metrika `sharesCreated` sa do tabuľky `daily_stats` ukladala denným snapshotom (`recordDailySnapshot`), ktorý počíta počet sdílení vytvorených *dnes* — v okne, ktoré sa práve začalo (job beží o 00:05) — takže sa každý deň uložila ≈ 0 a graf bol prázdny (plochá čiara na nule). Ostatné metriky sú okamžité súčty (aktívne sdílení, súbory, používatelia, stažení, úložisko), takže im snapshot o 00:05 nevadil; preto chyba postihla výhradne `sharesCreated`. Po novom snapshot navyše **dopočíta a finalizuje predchádzajúci, kompletný deň** — `updateMany` nad `daily_stats` pre včerajší dátum s reálnym počtom `share.createdAt ∈ [včera, dnes)`. Časová os tým zobrazuje správne denné hodnoty bez ohľadu na reštarty servera.
+  - **Žiadna zmena rozvrhu nie je potrebná.** Job zámerne ostáva na **00:05**: finalizácia beží skoro ráno, *predtým* než 6-hodinový čistiaci job stihne zmazať expirované sdílení z včerajška. Keďže najkratšia expirácia je 1 deň (dni sú celočíselné), o 00:05 sú ešte všetky včerajšie sdílení v DB a počet je presný. (Pôvodne zvažované presunutie na 23:55 by počet naopak *podhodnotilo* — krátkožijúce sdílení by čistič stihol zmazať skôr, než by sa započítali.)
+  - **Aktuálny deň** je vždy „rozrobený" a finalizuje sa až ďalším ranným behom — bežné správanie grafu denne vytvorených položiek.
+  - **Historické dáta:** už uložené (nesprávne ≈ 0) riadky sa spätne neopravujú — expirované sdílení sú natvrdo mazané, takže minulosť sa nedá presne zrekonštruovať. Správne hodnoty pribúdajú od prvej finalizácie po nasadení.
+
+### Changed
+- **`recordDailySnapshot` rozdelený** na `captureDailySnapshot()` (snapshot + finalizácia, *bez* mazania) a `purgeRetention()` (retenčné mazanie `security_events` > 30 dní / `daily_stats` > 1 rok). Cron volá oboje; funkčný test volá len nedeštruktívny `captureDailySnapshot()`, takže nikdy nespustí retenčné mazanie.
+
+### Added
+- **`backend/scripts/test-shares-created-timeline.ts`** — samostatný `tsx`-spustiteľný funkčný/regresný test (`npm run test:timeline` v `backend/`): naseje sdílení datované na včera, spustí `captureDailySnapshot()` a overí, že finalizovaný `daily_stats.sharesCreated` pre včerajšok = reálny živý počet (a obsahuje naseté riadky); všetko po sebe upratuje a odmieta beh pri `NODE_ENV=production`. Proti kódu bez finalizácie test zlyhá (regresná hodnota).
+
+### Files changed
+- Backend: `src/services/dailyStats.ts` (finalizácia predchádzajúceho dňa + rozdelenie snapshot/retencia), `scripts/test-shares-created-timeline.ts` (nový), `package.json` (`test:timeline`)
+- Frontend: `package.json` (verzia 1.4.2)
+- Docs: `docs/CHANGELOG.md`
+
 ## [1.4.1] - 2026-06-29
 
 ### Changed
