@@ -1,6 +1,6 @@
 export default {
   home: {
-    subtitle: "Partajarea dvs. temporară și securizată a fișierelor corporative cu criptare end-to-end.",
+    subtitle: "Partajare temporară a fișierelor.",
     uploadBtn: "Încarcă fișiere",
     featureEncryption: "Criptare E2E",
     featureEncryptionDesc: "Fișierele sunt criptate direct în browserul dvs. înainte de a fi trimise.",

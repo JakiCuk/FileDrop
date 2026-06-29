@@ -1,6 +1,6 @@
 export default {
   home: {
-    subtitle: "Vaša varna začasna poslovna izmenjava datotek s šifriranjem od konca do konca.",
+    subtitle: "Začasna izmenjava datotek.",
     uploadBtn: "Naloži datoteke",
     featureEncryption: "E2E šifriranje",
     featureEncryptionDesc: "Datoteke so šifrirane neposredno v vašem brskalniku, preden so poslane.",

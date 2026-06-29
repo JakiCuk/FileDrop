@@ -1,6 +1,6 @@
 export default {
   home: {
-    subtitle: "Su intercambio temporal y seguro de archivos corporativos con cifrado de extremo a extremo.",
+    subtitle: "Intercambio temporal de archivos.",
     uploadBtn: "Subir archivos",
     featureEncryption: "Cifrado E2E",
     featureEncryptionDesc: "Los archivos se cifran directamente en tu navegador antes de ser enviados.",

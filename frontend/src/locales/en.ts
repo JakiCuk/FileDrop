@@ -1,6 +1,6 @@
 export default {
   home: {
-    subtitle: "Your secure corporate temporary file sharing with end-to-end encryption.",
+    subtitle: "Temporary file sharing.",
     uploadBtn: "Upload files",
     featureEncryption: "E2E Encryption",
     featureEncryptionDesc: "Files are encrypted directly in your browser before being sent.",

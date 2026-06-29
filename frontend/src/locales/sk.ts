@@ -1,6 +1,6 @@
 export default {
   home: {
-    subtitle: "Vaše bezpečné firemné dočasné zdieľanie súborov s end-to-end šifrovaním.",
+    subtitle: "Dočasné zdieľanie súborov.",
     uploadBtn: "Nahrať súbory",
     featureEncryption: "E2E Šifrovanie",
     featureEncryptionDesc: "Súbory sú šifrované priamo vo vašom prehliadači pred odoslaním.",

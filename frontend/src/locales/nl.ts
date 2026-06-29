@@ -1,6 +1,6 @@
 export default {
   home: {
-    subtitle: "Uw veilige tijdelijke zakelijke bestandsdeling met end-to-end-encryptie.",
+    subtitle: "Tijdelijke bestandsdeling.",
     uploadBtn: "Bestanden uploaden",
     featureEncryption: "E2E-encryptie",
     featureEncryptionDesc: "Bestanden worden direct in je browser versleuteld voordat ze worden verzonden.",

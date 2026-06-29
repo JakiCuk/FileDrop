@@ -1,6 +1,6 @@
 export default {
   home: {
-    subtitle: "A sua partilha temporária e segura de ficheiros empresariais com encriptação ponto-a-ponto.",
+    subtitle: "Partilha temporária de ficheiros.",
     uploadBtn: "Carregar ficheiros",
     featureEncryption: "Encriptação E2E",
     featureEncryptionDesc: "Os ficheiros são encriptados diretamente no navegador antes de serem enviados.",

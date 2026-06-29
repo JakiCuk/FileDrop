@@ -1,6 +1,6 @@
 export default {
   home: {
-    subtitle: "Vaše sigurno korporativno privremeno dijeljenje datoteka s end-to-end enkripcijom.",
+    subtitle: "Privremeno dijeljenje datoteka.",
     uploadBtn: "Učitaj datoteke",
     featureEncryption: "E2E enkripcija",
     featureEncryptionDesc: "Datoteke se kriptiraju izravno u vašem pregledniku prije slanja.",

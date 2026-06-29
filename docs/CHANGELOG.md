@@ -1,5 +1,10 @@
 # FileDrop — Changelog
 
+## [1.4.1] - 2026-06-29
+
+### Changed
+- **Skrátený podnadpis na hlavnej stránke** — `home.subtitle` vo **všetkých 22 jazykoch** zjednodušený na samotné „Dočasné sdílení souborů." (a jazykové ekvivalenty); odstránená časť „Vaše bezpečné firemní…" aj „…s end-to-end šifrováním."
+
 ## [1.4.0] - 2026-06-22
 
 ### Added

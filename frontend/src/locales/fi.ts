@@ -1,6 +1,6 @@
 export default {
   home: {
-    subtitle: "Turvallinen väliaikainen yritystiedostojen jakaminen päästä päähän -salauksella.",
+    subtitle: "Väliaikainen tiedostojen jakaminen.",
     uploadBtn: "Lataa tiedostoja",
     featureEncryption: "E2E-salaus",
     featureEncryptionDesc: "Tiedostot salataan suoraan selaimessasi ennen lähettämistä.",

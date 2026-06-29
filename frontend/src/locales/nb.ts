@@ -1,6 +1,6 @@
 export default {
   home: {
-    subtitle: "Din sikre midlertidige bedriftsfildeling med ende-til-ende-kryptering.",
+    subtitle: "Midlertidig fildeling.",
     uploadBtn: "Last opp filer",
     featureEncryption: "E2E-kryptering",
     featureEncryptionDesc: "Filene krypteres direkte i nettleseren din før de sendes.",

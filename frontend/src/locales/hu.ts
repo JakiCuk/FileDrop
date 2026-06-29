@@ -1,6 +1,6 @@
 export default {
   home: {
-    subtitle: "Az Ön biztonságos vállalati ideiglenes fájlmegosztása végponttól végpontig titkosítással.",
+    subtitle: "Ideiglenes fájlmegosztás.",
     uploadBtn: "Fájlok feltöltése",
     featureEncryption: "E2E titkosítás",
     featureEncryptionDesc: "A fájlok közvetlenül a böngészőjében titkosítódnak küldés előtt.",

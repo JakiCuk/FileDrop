@@ -1,6 +1,6 @@
 export default {
   home: {
-    subtitle: "Ihr sicherer temporärer Firmendateiaustausch mit Ende-zu-Ende-Verschlüsselung.",
+    subtitle: "Temporärer Dateiaustausch.",
     uploadBtn: "Dateien hochladen",
     featureEncryption: "E2E-Verschlüsselung",
     featureEncryptionDesc: "Dateien werden direkt in Ihrem Browser verschlüsselt, bevor sie gesendet werden.",

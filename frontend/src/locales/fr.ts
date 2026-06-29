@@ -1,6 +1,6 @@
 export default {
   home: {
-    subtitle: "Votre partage temporaire et sécurisé de fichiers d'entreprise avec chiffrement de bout en bout.",
+    subtitle: "Partage temporaire de fichiers.",
     uploadBtn: "Téléverser des fichiers",
     featureEncryption: "Chiffrement E2E",
     featureEncryptionDesc: "Les fichiers sont chiffrés directement dans votre navigateur avant d'être envoyés.",

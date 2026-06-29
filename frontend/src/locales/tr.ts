@@ -1,6 +1,6 @@
 export default {
   home: {
-    subtitle: "Uçtan uca şifreleme ile güvenli kurumsal geçici dosya paylaşımınız.",
+    subtitle: "Geçici dosya paylaşımı.",
     uploadBtn: "Dosya yükle",
     featureEncryption: "E2E şifreleme",
     featureEncryptionDesc: "Dosyalar gönderilmeden önce doğrudan tarayıcınızda şifrelenir.",

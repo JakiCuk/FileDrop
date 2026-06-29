@@ -1,6 +1,6 @@
 export default {
   home: {
-    subtitle: "La vostra condivisione aziendale temporanea e sicura di file con crittografia end-to-end.",
+    subtitle: "Condivisione temporanea di file.",
     uploadBtn: "Carica file",
     featureEncryption: "Crittografia E2E",
     featureEncryptionDesc: "I file vengono crittografati direttamente nel browser prima dell'invio.",

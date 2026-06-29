@@ -1,6 +1,6 @@
 export default {
   home: {
-    subtitle: "Twoje bezpieczne firmowe tymczasowe udostępnianie plików z szyfrowaniem end-to-end.",
+    subtitle: "Tymczasowe udostępnianie plików.",
     uploadBtn: "Prześlij pliki",
     featureEncryption: "Szyfrowanie E2E",
     featureEncryptionDesc: "Pliki są szyfrowane bezpośrednio w przeglądarce przed wysłaniem.",
